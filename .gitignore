@@ -1,2 +1,4 @@
 /target
 /Cargo.lock
+/research/research-env
+.ipynb_checkpoints

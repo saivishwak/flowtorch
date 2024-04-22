@@ -1,4 +1,4 @@
-use flow_core::{DType, Device, Tensor};
+use flowtorch_core::{DType, Device, Tensor};
 
 #[test]
 fn zeros() {

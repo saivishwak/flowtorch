@@ -16,7 +16,7 @@ impl Tensor {
     pub fn zeros(shape: &[usize], dtype: DType, device: Device) -> Self {
         let storage = device.zeros(shape, dtype);
         let tensor_ = Tensor_ {
-            storage: storage,
+            storage,
             shape: shape.to_vec(),
             stride: vec![1; shape.len()],
             op: None,

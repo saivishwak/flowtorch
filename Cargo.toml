@@ -8,7 +8,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-license = "Apache-2.0"
+license = "MIT OR Apache-2.0"
 description = "Safe & Performant Scientific Computing Library."
 repository = "https://github.com/saivishwak/flowtorch"
 keywords = ["blas", "tensor", "machine-learning"]

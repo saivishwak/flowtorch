@@ -1,0 +1,13 @@
+[package]
+name = "flowtorch"
+version = "0.1.0"
+edition = "2021"
+
+description = "Safe & Performant Scientific Computing Library."
+repository = "https://github.com/saivishwak/flowtorch"
+keywords = ["blas", "tensor", "machine-learning"]
+categories = ["science"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

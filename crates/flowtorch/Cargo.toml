@@ -1,14 +1,11 @@
-[workspace]
-members = ["crates/*"]
+[package]
+name = "flowtorch"
+authors = ["Sai Vishwak K <saivishwak40@gmail.com>"]
+license.workspace = true
+edition.workspace = true
+readme.workspace = true
+version.workspace = true
 
-exclude = ["research"]
-
-resolver = "2"
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-license = "Apache-2.0"
 description = "Safe & Performant Scientific Computing Library."
 repository = "https://github.com/saivishwak/flowtorch"
 keywords = ["blas", "tensor", "machine-learning"]
@@ -16,4 +13,4 @@ categories = ["science"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace.dependencies]
+[dependencies]

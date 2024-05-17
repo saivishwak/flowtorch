@@ -6,8 +6,6 @@ pub enum DType {
     U32,
     // Signed 64 bits integer.
     I64,
-    // Floating-point using half precision (16 bits).
-    F16,
     // Floating-point using single precision (32 bits).
     F32,
     // Floating-point using double precision (64 bits).

@@ -2,6 +2,7 @@ mod cpu_backend;
 mod device;
 mod dtype;
 mod op;
+mod shape;
 mod storage;
 mod tensor;
 

@@ -1,5 +1,4 @@
-use crate::{cpu_backend::CpuStorage, storage::Storage, DType};
-use ndarray::{ArrayD, IxDyn};
+use crate::{cpu_backend::CpuDevice, shape::Shape, storage::Storage, DType};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Device {
@@ -7,23 +6,11 @@ pub enum Device {
 }
 
 impl Device {
-    pub fn zeros(&self, shape: &[usize], dtype: DType) -> Result<Storage, ()> {
+    pub fn zeros(&self, shape: &Shape, dtype: DType) -> Result<Storage, ()> {
         match self {
             Device::Cpu => {
-                match dtype {
-                    DType::F32 => {
-                        let buffer = ArrayD::<f32>::zeros(IxDyn(shape)).into_raw_vec();
-                        return Ok(Storage::Cpu(CpuStorage::F32(buffer)));
-                    }
-                    DType::F64 => {
-                        let buffer = ArrayD::<f64>::zeros(IxDyn(shape)).into_raw_vec();
-                        return Ok(Storage::Cpu(CpuStorage::F64(buffer)));
-                    }
-                    DType::U8 => todo!(),
-                    DType::U32 => todo!(),
-                    DType::I64 => todo!(),
-                    DType::F16 => todo!(),
-                };
+                let storage = CpuDevice::zeros(shape, dtype)?;
+                return Ok(Storage::Cpu(storage));
             }
         }
     }

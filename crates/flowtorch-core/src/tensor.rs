@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 use std::sync::Arc;
 
-use crate::{op::Op, storage::Storage, DType, Device};
+use crate::{op::Op, shape::Shape, storage::Storage, DType, Device};
 
 pub struct Tensor_ {
     storage: Storage,
@@ -13,7 +13,7 @@ pub struct Tensor_ {
 pub struct Tensor(Arc<Tensor_>);
 
 impl Tensor {
-    pub fn zeros(shape: &[usize], dtype: DType, device: &Device) -> Result<Self, ()> {
+    pub fn zeros(shape: &Shape, dtype: DType, device: &Device) -> Result<Self, ()> {
         let storage = device.zeros(shape, dtype)?;
         let tensor_ = Tensor_ {
             storage,

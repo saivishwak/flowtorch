@@ -1,4 +1,5 @@
-use crate::{storage::Storage, DType};
+use crate::{cpu_backend::CpuStorage, storage::Storage, DType};
+use ndarray::{ArrayD, IxDyn};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Device {
@@ -6,22 +7,23 @@ pub enum Device {
 }
 
 impl Device {
-    pub fn zeros(&self, shape: &[usize], dtype: DType) -> Storage {
+    pub fn zeros(&self, shape: &[usize], dtype: DType) -> Result<Storage, ()> {
         match self {
             Device::Cpu => {
-                let elem_count: usize = shape.iter().product();
-                let buffer: Vec<u8> = match dtype {
+                match dtype {
                     DType::F32 => {
-                        let data = vec![0f32; elem_count];
-                        data.iter().flat_map(|&x| x.to_le_bytes()).collect()
+                        let buffer = ArrayD::<f32>::zeros(IxDyn(shape)).into_raw_vec();
+                        return Ok(Storage::Cpu(CpuStorage::F32(buffer)));
                     }
                     DType::F64 => {
-                        let data = vec![0f64; elem_count];
-                        data.iter().flat_map(|&x| x.to_le_bytes()).collect()
+                        let buffer = ArrayD::<f64>::zeros(IxDyn(shape)).into_raw_vec();
+                        return Ok(Storage::Cpu(CpuStorage::F64(buffer)));
                     }
+                    DType::U8 => todo!(),
+                    DType::U32 => todo!(),
+                    DType::I64 => todo!(),
+                    DType::F16 => todo!(),
                 };
-                //let buffer = vec![0; elem_count * dtype.size_in_bytes()];
-                Storage::Cpu { dtype, buffer }
             }
         }
     }

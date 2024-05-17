@@ -1,23 +1,25 @@
-use crate::{DType, Device};
+use crate::{cpu_backend::CpuStorage, DType, Device};
 
-#[allow(dead_code)]
 pub enum Storage {
-    Cpu {
-        dtype: crate::DType,
-        buffer: Vec<u8>,
-    },
+    Cpu(CpuStorage),
 }
 
 impl Storage {
     pub fn device(&self) -> Device {
         match self {
-            Self::Cpu { .. } => Device::Cpu,
+            Self::Cpu(_) => Device::Cpu,
         }
     }
 
     pub fn dtype(&self) -> DType {
         match self {
-            Self::Cpu { dtype, .. } => *dtype,
+            Self::Cpu(storage) => match storage {
+                CpuStorage::U8(_) => DType::U8,
+                CpuStorage::U32(_) => DType::U32,
+                CpuStorage::I64(_) => DType::I64,
+                CpuStorage::F32(_) => DType::F32,
+                CpuStorage::F64(_) => DType::F64,
+            },
         }
     }
 }

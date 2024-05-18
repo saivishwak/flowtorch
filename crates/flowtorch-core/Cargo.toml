@@ -10,9 +10,3 @@ description = "Safe & Performant Scientific Computing Library."
 repository = "https://github.com/saivishwak/flowtorch"
 keywords = ["blas", "tensor", "machine-learning"]
 categories = ["science"]
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-ndarray = "0.15.6"

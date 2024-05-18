@@ -14,4 +14,13 @@ impl Device {
             }
         }
     }
+
+    pub fn ones(&self, shape: &Shape, dtype: DType) -> Result<Storage, ()> {
+        match self {
+            Device::Cpu => {
+                let storage = CpuDevice::ones(shape, dtype)?;
+                return Ok(Storage::Cpu(storage));
+            }
+        }
+    }
 }

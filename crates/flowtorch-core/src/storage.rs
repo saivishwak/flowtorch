@@ -1,5 +1,6 @@
 use crate::{cpu_backend::CpuStorage, DType, Device};
 
+#[derive(Debug)]
 pub enum Storage {
     Cpu(CpuStorage),
 }

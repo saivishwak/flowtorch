@@ -1,8 +1,14 @@
 #![allow(unused_imports)]
 use std::sync::Arc;
 
-use crate::{op::Op, shape::Shape, storage::Storage, DType, Device};
+use crate::{
+    op::Op,
+    shape::Shape,
+    storage::{self, Storage},
+    DType, Device,
+};
 
+#[derive(Debug)]
 pub struct Tensor_ {
     storage: Storage,
     shape: Vec<usize>,
@@ -10,11 +16,21 @@ pub struct Tensor_ {
     //op: Option<Op>,
 }
 
+#[derive(Debug)]
 pub struct Tensor(Arc<Tensor_>);
 
 impl Tensor {
     pub fn zeros(shape: &Shape, dtype: DType, device: &Device) -> Result<Self, ()> {
         let storage = device.zeros(shape, dtype)?;
+        return Self::from_storage(storage, shape);
+    }
+
+    pub fn ones(shape: &Shape, dtype: DType, device: &Device) -> Result<Self, ()> {
+        let storage = device.ones(shape, dtype)?;
+        return Self::from_storage(storage, shape);
+    }
+
+    fn from_storage(storage: Storage, shape: &Shape) -> Result<Self, ()> {
         let tensor_ = Tensor_ {
             storage,
             shape: shape.to_vec(),
@@ -34,7 +50,7 @@ impl Tensor {
         self.0.storage.device()
     }
 
-    pub fn shape(&self) -> &[usize] {
+    pub fn shape(&self) -> &Shape {
         &self.0.shape
     }
 

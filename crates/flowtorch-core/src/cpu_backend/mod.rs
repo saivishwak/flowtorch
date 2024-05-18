@@ -14,7 +14,8 @@ pub struct CpuDevice;
 
 impl CpuDevice {
     pub fn zeros(shape: &Shape, dtype: DType) -> Result<CpuStorage, ()> {
-        let num_elements = shape.iter().product();
+        let shape_vec: Vec<usize> = shape.into();
+        let num_elements = shape_vec.iter().product();
         match dtype {
             DType::F32 => Ok(CpuStorage::F32(vec![0f32; num_elements])),
             DType::F64 => Ok(CpuStorage::F64(vec![0f64; num_elements])),
@@ -25,7 +26,8 @@ impl CpuDevice {
     }
 
     pub fn ones(shape: &Shape, dtype: DType) -> Result<CpuStorage, ()> {
-        let num_elements = shape.iter().product();
+        let shape_vec: Vec<usize> = shape.into();
+        let num_elements = shape_vec.iter().product();
         match dtype {
             DType::F32 => Ok(CpuStorage::F32(vec![1f32; num_elements])),
             DType::F64 => Ok(CpuStorage::F64(vec![1f64; num_elements])),

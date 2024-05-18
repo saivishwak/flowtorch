@@ -1,7 +1,8 @@
 #![allow(unused_imports)]
-use std::sync::Arc;
+use std::{sync::Arc, vec};
 
 use crate::{
+    layout::{Layout, Strides},
     op::Op,
     shape::Shape,
     storage::{self, Storage},
@@ -11,31 +12,29 @@ use crate::{
 #[derive(Debug)]
 pub struct Tensor_ {
     storage: Storage,
-    shape: Vec<usize>,
-    stride: Vec<usize>,
-    //op: Option<Op>,
+    layout: Layout, //op: Option<Op>,
 }
 
 #[derive(Debug)]
 pub struct Tensor(Arc<Tensor_>);
 
 impl Tensor {
-    pub fn zeros(shape: &Shape, dtype: DType, device: &Device) -> Result<Self, ()> {
-        let storage = device.zeros(shape, dtype)?;
+    pub fn zeros<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, ()> {
+        let shape = shape.into();
+        let storage = device.zeros(&shape, dtype)?;
         return Self::from_storage(storage, shape);
     }
 
-    pub fn ones(shape: &Shape, dtype: DType, device: &Device) -> Result<Self, ()> {
-        let storage = device.ones(shape, dtype)?;
+    pub fn ones<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, ()> {
+        let shape = shape.into();
+        let storage = device.ones(&shape, dtype)?;
         return Self::from_storage(storage, shape);
     }
 
-    fn from_storage(storage: Storage, shape: &Shape) -> Result<Self, ()> {
+    fn from_storage<S: Into<Shape>>(storage: Storage, shape: S) -> Result<Self, ()> {
         let tensor_ = Tensor_ {
             storage,
-            shape: shape.to_vec(),
-            stride: vec![1; shape.len()],
-            //op: None,
+            layout: Layout::contiguous(shape),
         };
         Ok(Tensor(Arc::new(tensor_)))
     }
@@ -50,21 +49,21 @@ impl Tensor {
         self.0.storage.device()
     }
 
-    pub fn shape(&self) -> &Shape {
-        &self.0.shape
+    pub fn shape(&self) -> Vec<usize> {
+        self.0.layout.get_shape().dims().clone()
     }
 
-    pub fn stride(&self) -> &[usize] {
-        &self.0.stride
+    pub fn strides(&self) -> Strides {
+        self.0.layout.get_strides()
     }
 
     //The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.
     pub fn rank(&self) -> usize {
-        self.0.shape.len()
+        self.0.layout.get_shape().rank()
     }
 
     //Max number of elements in the Tensor
     pub fn elem_count(&self) -> usize {
-        self.0.shape.iter().product()
+        self.0.layout.get_shape().elem_count()
     }
 }

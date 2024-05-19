@@ -68,9 +68,6 @@ impl CpuStorage {
                     .concat();
                 Self::F64(storages)
             }
-            _ => {
-                return Err(());
-            }
         };
         Ok(s)
     }

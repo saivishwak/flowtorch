@@ -2,6 +2,7 @@
 use std::{sync::Arc, vec};
 
 use crate::{
+    device::NdArray,
     layout::{Layout, Strides},
     op::Op,
     shape::Shape,
@@ -12,13 +13,23 @@ use crate::{
 #[derive(Debug)]
 pub struct Tensor_ {
     storage: Storage,
-    layout: Layout, //op: Option<Op>,
+    layout: Layout,
+    //op: Option<Op>,
 }
 
 #[derive(Debug)]
 pub struct Tensor(Arc<Tensor_>);
 
 impl Tensor {
+    pub fn new<D>(array: D, device: &Device) -> Result<Self, ()>
+    where
+        D: NdArray,
+    {
+        let shape = array.shape()?;
+        let storage = device.from_array(array)?;
+        return Self::from_storage(storage, shape);
+    }
+
     pub fn zeros<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, ()> {
         let shape = shape.into();
         let storage = device.zeros(&shape, dtype)?;

@@ -1,4 +1,4 @@
-use crate::{shape::Shape, DType};
+use crate::{device::NdArray, shape::Shape, DType};
 
 #[derive(Debug)]
 pub enum CpuStorage {
@@ -9,7 +9,72 @@ pub enum CpuStorage {
     F64(Vec<f64>),
 }
 
-impl CpuStorage {}
+impl CpuStorage {
+    pub fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, ()> {
+        let storage0 = &storages[0];
+        let s = match storage0 {
+            Self::U8(_) => {
+                let storages = storages
+                    .iter()
+                    .map(|s| match s {
+                        Self::U8(s) => Ok(s.as_slice()),
+                        _ => Err(()),
+                    })
+                    .collect::<Result<Vec<_>, ()>>()?
+                    .concat();
+                Self::U8(storages)
+            }
+            Self::U32(_) => {
+                let storages = storages
+                    .iter()
+                    .map(|s| match s {
+                        Self::U32(s) => Ok(s.as_slice()),
+                        _ => Err(()),
+                    })
+                    .collect::<Result<Vec<_>, ()>>()?
+                    .concat();
+                Self::U32(storages)
+            }
+            Self::I64(_) => {
+                let storages = storages
+                    .iter()
+                    .map(|s| match s {
+                        Self::I64(s) => Ok(s.as_slice()),
+                        _ => Err(()),
+                    })
+                    .collect::<Result<Vec<_>, ()>>()?
+                    .concat();
+                Self::I64(storages)
+            }
+            Self::F32(_) => {
+                let storages = storages
+                    .iter()
+                    .map(|s| match s {
+                        Self::F32(s) => Ok(s.as_slice()),
+                        _ => Err(()),
+                    })
+                    .collect::<Result<Vec<_>, ()>>()?
+                    .concat();
+                Self::F32(storages)
+            }
+            Self::F64(_) => {
+                let storages = storages
+                    .iter()
+                    .map(|s| match s {
+                        Self::F64(s) => Ok(s.as_slice()),
+                        _ => Err(()),
+                    })
+                    .collect::<Result<Vec<_>, ()>>()?
+                    .concat();
+                Self::F64(storages)
+            }
+            _ => {
+                return Err(());
+            }
+        };
+        Ok(s)
+    }
+}
 pub struct CpuDevice;
 
 impl CpuDevice {
@@ -35,5 +100,9 @@ impl CpuDevice {
             DType::U32 => Ok(CpuStorage::U32(vec![1u32; num_elements])),
             DType::I64 => Ok(CpuStorage::I64(vec![1i64; num_elements])),
         }
+    }
+
+    pub fn from_array<D: NdArray>(array: D) -> Result<CpuStorage, ()> {
+        Ok(array.to_cpu_storage())
     }
 }

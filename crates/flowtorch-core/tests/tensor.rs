@@ -1,3 +1,5 @@
+use std::vec;
+
 use flowtorch_core::{DType, Device, Shape, Tensor};
 
 fn zeros(device: &Device) -> Result<(), ()> {
@@ -36,6 +38,34 @@ fn strides(device: &Device) -> Result<(), ()> {
     Ok(())
 }
 
+fn new(device: &Device) -> Result<(), ()> {
+    println!(
+        "Tensor from data {:?}",
+        Tensor::new(
+            &[[[0.0, 1.0], [3.0, 1.0]], [[1.0, 1.0], [3.0, 1.0]]],
+            device
+        )?
+    );
+    println!("Tensor from data {:?}", Tensor::new(&[1.0], device)?);
+    println!(
+        "Tensor from data {:?}",
+        Tensor::new(&[[[1.0], [2.0]], [[3.0], [2.0]]], device)?
+    );
+    println!(
+        "Tensor from data {:?}",
+        Tensor::new(vec![1.0, 2.0], device)?
+    );
+    println!(
+        "Tensor from data {:?}",
+        Tensor::new(vec![vec![2.0, 10.0], vec![2.0, 4.0]], device)?
+    );
+    // assert_eq!(
+    //     Tensor::new(vec![1, 2], DType::F32, device)?.to_vec(),
+    //     vec![1, 2]
+    // );
+    Ok(())
+}
+
 #[test]
 fn test_zeros() {
     let device = Device::Cpu;
@@ -52,4 +82,10 @@ fn test_ones() {
 fn test_strides() {
     let device = Device::Cpu;
     let _ = strides(&device);
+}
+
+#[test]
+fn test_new() {
+    let device = Device::Cpu;
+    let _ = new(&device);
 }

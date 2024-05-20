@@ -1,20 +1,20 @@
 #![allow(dead_code)]
 use crate::shape::Shape;
 
-pub type Strides = Vec<usize>;
+pub type Stride = Vec<usize>;
 
 #[derive(Debug)]
 pub struct Layout {
     shape: Shape,
-    strides: Strides,
-    offset: usize,
+    stride: Stride,
+    pub offset: usize,
 }
 
 impl Layout {
-    pub fn new(shape: Shape, strides: Vec<usize>, offset: usize) -> Self {
+    pub fn new(shape: Shape, stride: Vec<usize>, offset: usize) -> Self {
         Self {
             shape,
-            strides,
+            stride,
             offset,
         }
     }
@@ -23,21 +23,26 @@ impl Layout {
         self.shape.clone()
     }
 
-    pub fn get_strides(&self) -> Strides {
-        self.strides.clone()
+    pub fn get_stride(&self) -> Stride {
+        self.stride.clone()
     }
 
     pub fn contiguous_with_offset<S: Into<Shape>>(shape: S, offset: usize) -> Self {
         let shape = shape.into();
-        let strides = shape.strides_contiguous();
+        let stride = shape.stride_contiguous();
         Self {
             shape,
-            strides,
+            stride,
             offset,
         }
     }
 
     pub fn contiguous<S: Into<Shape>>(shape: S) -> Self {
         Self::contiguous_with_offset(shape, 0)
+    }
+
+    // Return true if the array is C contiguous (aka Row Major)
+    pub fn is_contiguous(&self) -> bool {
+        return self.shape.is_contiguous(&self.stride);
     }
 }

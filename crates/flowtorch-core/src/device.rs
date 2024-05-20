@@ -52,7 +52,7 @@ impl<S: WithDType, const N: usize> NdArray for &[S; N] {
 //2D Array
 impl<S: WithDType, const N: usize, const M: usize> NdArray for &[[S; N]; M] {
     fn shape(&self) -> Result<Shape, ()> {
-        Ok(Shape::from((N, M)))
+        Ok(Shape::from((M, N)))
     }
     fn to_cpu_storage(&self) -> CpuStorage {
         S::to_cpu_storage(self.concat().as_slice())
@@ -145,7 +145,7 @@ impl Device {
     pub fn from_array<D: NdArray>(&self, array: D) -> Result<Storage, ()> {
         match self {
             Device::Cpu => {
-                let storage = CpuDevice::from_array(array)?;
+                let storage = array.to_cpu_storage();
                 return Ok(Storage::Cpu(storage));
             }
         }

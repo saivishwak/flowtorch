@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::cpu_backend::CpuStorage;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -14,7 +16,7 @@ pub enum DType {
     F64,
 }
 
-pub trait WithDType: Sized + Copy + 'static {
+pub trait WithDType: Sized + Copy + 'static + Debug {
     fn to_cpu_storage(data: &[Self]) -> CpuStorage;
 }
 

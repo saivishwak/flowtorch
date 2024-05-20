@@ -1,12 +1,11 @@
-#![allow(unused_imports)]
-use std::{sync::Arc, vec};
+//! Tensors are N-dimensional matrixes of elements using a single data type.
+use std::sync::Arc;
 
 use crate::{
     device::NdArray,
-    layout::{Layout, Strides},
-    op::Op,
+    layout::{Layout, Stride},
     shape::Shape,
-    storage::{self, Storage},
+    storage::Storage,
     DType, Device,
 };
 
@@ -14,7 +13,7 @@ use crate::{
 pub struct Tensor_ {
     storage: Storage,
     layout: Layout,
-    //op: Option<Op>,
+    device: Device, //op: Option<Op>,
 }
 
 #[derive(Debug)]
@@ -43,11 +42,33 @@ impl Tensor {
     }
 
     fn from_storage<S: Into<Shape>>(storage: Storage, shape: S) -> Result<Self, ()> {
+        let device = storage.device();
         let tensor_ = Tensor_ {
             storage,
             layout: Layout::contiguous(shape),
+            device,
         };
         Ok(Tensor(Arc::new(tensor_)))
+    }
+
+    pub fn reshape<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, ()> {
+        let shape: Shape = shape.into();
+        if shape.elem_count() != self.elem_count() {
+            //Shape mismatch
+            return Err(());
+        }
+        if self.0.layout.is_contiguous() {
+            let storage = self.0.storage.clone();
+            let device = storage.device();
+            let tensor_ = Tensor_ {
+                storage,
+                layout: Layout::contiguous_with_offset(shape, self.0.layout.offset),
+                device,
+            };
+            return Ok(Tensor(Arc::new(tensor_)));
+        }
+        // Not yet handling the Fotran Contiguous style
+        Err(())
     }
 
     //The reason for self.0 is Tensor is a tuple struct wapper around Tensor_ with Arc
@@ -57,15 +78,15 @@ impl Tensor {
     }
 
     pub fn device(&self) -> Device {
-        self.0.storage.device()
+        self.0.device
     }
 
     pub fn shape(&self) -> Vec<usize> {
         self.0.layout.get_shape().dims().clone()
     }
 
-    pub fn strides(&self) -> Strides {
-        self.0.layout.get_strides()
+    pub fn stride(&self) -> Stride {
+        self.0.layout.get_stride()
     }
 
     //The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.

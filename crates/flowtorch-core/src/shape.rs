@@ -1,3 +1,5 @@
+use crate::layout::Stride;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Shape(Vec<usize>);
 
@@ -25,27 +27,57 @@ impl Shape {
         self.0.iter().product()
     }
 
-    pub fn strides_contiguous(&self) -> Vec<usize> {
+    pub fn stride_contiguous(&self) -> Vec<usize> {
         let shape = &self.0;
-        let mut strides: Vec<usize> = vec![0; shape.len()];
+        let mut stride: Vec<usize> = vec![0; shape.len()];
 
         if shape.len() == 0 {
-            return strides;
+            return stride;
         }
 
         //as this is first time insertion, the last element is 1
-        strides[shape.len() - 1] = 1;
+        stride[shape.len() - 1] = 1;
 
         //Early return as 1D array has strides as 1
         if shape.len() == 1 {
-            return strides;
+            return stride;
         }
 
         for i in (0..=shape.len() - 2).rev() {
-            strides[i] = shape[i + 1] * strides[i + 1];
+            stride[i] = shape[i + 1] * stride[i + 1];
         }
 
-        return strides;
+        return stride;
+    }
+
+    // Return true if the array is C contiguous (aka Row Major)
+    pub fn is_contiguous(&self, strides: &Stride) -> bool {
+        if self.0.len() != strides.len() {
+            return false;
+        }
+        let mut acc = 1;
+        for (&stride, &dim) in strides.iter().zip(self.0.iter()).rev() {
+            if dim > 1 && acc != stride {
+                return false;
+            }
+            acc *= dim;
+        }
+        true
+    }
+
+    // Return true if the array is Fotran contiguous (aka Column Major)
+    pub fn is_fotran_contiguous(&self, strides: &Stride) -> bool {
+        if self.0.len() != strides.len() {
+            return false;
+        }
+        let mut acc = 1;
+        for (&stride, &dim) in strides.iter().zip(self.0.iter()) {
+            if dim > 1 && acc != stride {
+                return false;
+            }
+            acc *= dim;
+        }
+        true
     }
 }
 

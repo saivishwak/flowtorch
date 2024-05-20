@@ -1,6 +1,6 @@
-use crate::{device::NdArray, shape::Shape, DType};
+use crate::{shape::Shape, DType};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CpuStorage {
     U8(Vec<u8>),
     U32(Vec<u32>),
@@ -10,6 +10,7 @@ pub enum CpuStorage {
 }
 
 impl CpuStorage {
+    //All the DataTypes should be same for a sequence of storages.
     pub fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, ()> {
         let storage0 = &storages[0];
         let s = match storage0 {
@@ -97,9 +98,5 @@ impl CpuDevice {
             DType::U32 => Ok(CpuStorage::U32(vec![1u32; num_elements])),
             DType::I64 => Ok(CpuStorage::I64(vec![1i64; num_elements])),
         }
-    }
-
-    pub fn from_array<D: NdArray>(array: D) -> Result<CpuStorage, ()> {
-        Ok(array.to_cpu_storage())
     }
 }

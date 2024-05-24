@@ -1,4 +1,7 @@
-use crate::{shape::Shape, DType};
+mod error;
+
+use crate::{shape::Shape, DType, Error};
+pub use error::*;
 
 #[derive(Debug, Clone)]
 pub enum CpuStorage {
@@ -11,7 +14,7 @@ pub enum CpuStorage {
 
 impl CpuStorage {
     //All the DataTypes should be same for a sequence of storages.
-    pub fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, ()> {
+    pub fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, CpuStorageError> {
         let storage0 = &storages[0];
         let s = match storage0 {
             Self::U8(_) => {
@@ -19,55 +22,100 @@ impl CpuStorage {
                     .iter()
                     .map(|s| match s {
                         Self::U8(s) => Ok(s.as_slice()),
-                        _ => Err(()),
+                        _ => {
+                            return Err(CpuStorageError::new(
+                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                            ))
+                        }
                     })
-                    .collect::<Result<Vec<_>, ()>>()?
-                    .concat();
-                Self::U8(storages)
+                    .collect::<Result<Vec<_>, CpuStorageError>>();
+                match storages {
+                    Ok(storages_unwrapped) => {
+                        let storages_concatenated = storages_unwrapped.concat();
+                        Self::U8(storages_concatenated)
+                    }
+                    Err(e) => return Err(e),
+                }
             }
             Self::U32(_) => {
                 let storages = storages
                     .iter()
                     .map(|s| match s {
                         Self::U32(s) => Ok(s.as_slice()),
-                        _ => Err(()),
+                        _ => {
+                            return Err(CpuStorageError::new(
+                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                            ))
+                        }
                     })
-                    .collect::<Result<Vec<_>, ()>>()?
-                    .concat();
-                Self::U32(storages)
+                    .collect::<Result<Vec<_>, CpuStorageError>>();
+                match storages {
+                    Ok(storages_unwrapped) => {
+                        let storages_concatenated = storages_unwrapped.concat();
+                        Self::U32(storages_concatenated)
+                    }
+                    Err(e) => return Err(e),
+                }
             }
             Self::I64(_) => {
                 let storages = storages
                     .iter()
                     .map(|s| match s {
                         Self::I64(s) => Ok(s.as_slice()),
-                        _ => Err(()),
+                        _ => {
+                            return Err(CpuStorageError::new(
+                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                            ))
+                        }
                     })
-                    .collect::<Result<Vec<_>, ()>>()?
-                    .concat();
-                Self::I64(storages)
+                    .collect::<Result<Vec<_>, CpuStorageError>>();
+                match storages {
+                    Ok(storages_unwrapped) => {
+                        let storages_concatenated = storages_unwrapped.concat();
+                        Self::I64(storages_concatenated)
+                    }
+                    Err(e) => return Err(e),
+                }
             }
             Self::F32(_) => {
                 let storages = storages
                     .iter()
                     .map(|s| match s {
                         Self::F32(s) => Ok(s.as_slice()),
-                        _ => Err(()),
+                        _ => {
+                            return Err(CpuStorageError::new(
+                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                            ))
+                        }
                     })
-                    .collect::<Result<Vec<_>, ()>>()?
-                    .concat();
-                Self::F32(storages)
+                    .collect::<Result<Vec<_>, CpuStorageError>>();
+                match storages {
+                    Ok(storages_unwrapped) => {
+                        let storages_concatenated = storages_unwrapped.concat();
+                        Self::F32(storages_concatenated)
+                    }
+                    Err(e) => return Err(e),
+                }
             }
             Self::F64(_) => {
                 let storages = storages
                     .iter()
                     .map(|s| match s {
                         Self::F64(s) => Ok(s.as_slice()),
-                        _ => Err(()),
+                        _ => {
+                            return Err(CpuStorageError::new(
+                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                            ))
+                        }
                     })
-                    .collect::<Result<Vec<_>, ()>>()?
-                    .concat();
-                Self::F64(storages)
+                    .collect::<Result<Vec<_>, CpuStorageError>>();
+                match storages {
+                    Ok(storages_unwrapped) => {
+                        let storages_concatenated = storages_unwrapped.concat();
+                        Self::F64(storages_concatenated)
+                    }
+                    Err(e) => return Err(e),
+                }
             }
         };
         Ok(s)
@@ -76,7 +124,7 @@ impl CpuStorage {
 pub struct CpuDevice;
 
 impl CpuDevice {
-    pub fn zeros(shape: &Shape, dtype: DType) -> Result<CpuStorage, ()> {
+    pub fn zeros(shape: &Shape, dtype: DType) -> Result<CpuStorage, Error> {
         let shape_vec: Vec<usize> = shape.into();
         let num_elements = shape_vec.iter().product();
         match dtype {
@@ -88,7 +136,7 @@ impl CpuDevice {
         }
     }
 
-    pub fn ones(shape: &Shape, dtype: DType) -> Result<CpuStorage, ()> {
+    pub fn ones(shape: &Shape, dtype: DType) -> Result<CpuStorage, Error> {
         let shape_vec: Vec<usize> = shape.into();
         let num_elements = shape_vec.iter().product();
         match dtype {

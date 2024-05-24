@@ -10,3 +10,6 @@ description = "Safe & Performant Scientific Computing Library."
 repository = "https://github.com/saivishwak/flowtorch"
 keywords = ["blas", "tensor", "machine-learning"]
 categories = ["science"]
+
+[dependencies]
+thiserror = "1.0.61"

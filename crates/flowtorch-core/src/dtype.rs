@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::cpu_backend::CpuStorage;
 
@@ -16,8 +16,21 @@ pub enum DType {
     F64,
 }
 
+impl Display for DType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DType::U8 => write!(f, "Dtype - u8"),
+            DType::U32 => write!(f, "Dtype - u32"),
+            DType::I64 => write!(f, "Dtype - i64"),
+            DType::F32 => write!(f, "Dtype - f32"),
+            DType::F64 => write!(f, "Dtype - f64"),
+        }
+    }
+}
+
 pub trait WithDType: Sized + Copy + 'static + Debug {
     fn to_cpu_storage(data: &[Self]) -> CpuStorage;
+    fn get_dtype() -> DType;
 }
 
 macro_rules! with_dtype {
@@ -25,6 +38,10 @@ macro_rules! with_dtype {
         impl WithDType for $ty {
             fn to_cpu_storage(data: &[Self]) -> CpuStorage {
                 CpuStorage::$dtype(data.to_vec())
+            }
+
+            fn get_dtype() -> DType {
+                DType::$dtype
             }
         }
     };

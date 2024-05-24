@@ -5,7 +5,6 @@ FlowTorch: Safe and Performant Scientific Computing Library
 ====
 
 ### Todo
-
 - [x] Add Tensor::new method to create a Tensdor from data
 - [x] Fix shape similar to PyTorch
 - [x] Provide default contiguous layout - C type (Row Major)

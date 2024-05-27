@@ -247,46 +247,80 @@ fn dtype() -> Result<(), ()> {
 
 #[test]
 // TODO - Need to add to_vec method to be able to test the output
-fn reshape() {
+fn format() {
     let device = &Device::Cpu;
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], device).unwrap()
-    // );
-
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], device)
-    //         .unwrap()
-    //         .reshape((3, 2, 1))
-    //         .unwrap()
-    // );
-
-    println!(
-        "Tensor from data {:?}",
-        Tensor::from_vec(vec![1.0], (1,), device).unwrap()
+    assert_eq!(
+        "[0]",
+        Tensor::from_vec(vec![0i64], (1,), device)
+            .unwrap()
+            .as_string(Some(false))
+            .unwrap()
+            .as_str()
     );
-
-    // println!("Tensor from data {:?}", Tensor::new(&[1.0], device)?);
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(&[[[1.0], [2.0]], [[3.0], [2.0]]], device)?
-    // );
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(vec![1.0, 2.0], device)?
-    // );
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(vec![vec![2.0, 10.0], vec![2.0, 4.0]], device)?
-    // );
-
-    // println!(
-    //     "Tensor from data {:?}",
-    //     Tensor::new(vec![vec![2.0, 10.0], vec![2.0, 4.0]], device)?.reshape((1, 4))?
-    // );
-    // assert_eq!(
-    //     Tensor::new(vec![1, 2], DType::F32, device)?.to_vec(),
-    //     vec![1, 2]
-    // );
+    assert_eq!(
+        "[1]",
+        Tensor::from_vec(vec![1.0], (1,), device)
+            .unwrap()
+            .as_string(Some(false))
+            .unwrap()
+            .as_str()
+    );
+    assert_eq!(
+        "[1, 2, 3]",
+        Tensor::new(&[1.0, 2.0, 3.0], device)
+            .unwrap()
+            .as_string(Some(false))
+            .unwrap()
+            .as_str()
+    );
+    assert_eq!(
+        "[[[1, 1, 1], [1, 1, 1], [1, 1, 1]], [[2, 2, 2], [2, 2, 2], [2, 2, 2]], [[3, 2, 2], [3, 2, 2], [3, 2, 2]]]",
+        Tensor::new(
+            &[
+                [[1.0f32, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+                [[2.0, 2.0, 2.0], [2.0, 2.0, 2.0], [2.0, 2.0, 2.0]],
+                [[3.0, 2.0, 2.0], [3.0, 2.0, 2.0], [3.0, 2.0, 2.0]]
+            ],
+            device
+        )
+        .unwrap()
+        .as_string(Some(false))
+        .unwrap()
+        .as_str()
+    );
+    assert_eq!(
+        "[[[1], [1]]]",
+        Tensor::new(&[[[1.0f32], [1.0]]], device)
+            .unwrap()
+            .as_string(Some(false))
+            .unwrap()
+            .as_str()
+    );
+    assert_eq!(
+        "[[[[1], [1], [1]], [[1], [1], [1]], [[1], [1], [1]]], [[[2], [2], [2]], [[2], [2], [2]], [[2], [2], [2]]], [[[3], [2], [2]], [[3], [2], [2]], [[3], [2], [2]]]]",
+        Tensor::new(
+            &[
+                [
+                    [[1.0f32], [1.0], [1.0]],
+                    [[1.0], [1.0], [1.0]],
+                    [[1.0], [1.0], [1.0]]
+                ],
+                [
+                    [[2.0], [2.0], [2.0]],
+                    [[2.0], [2.0], [2.0]],
+                    [[2.0], [2.0], [2.0]]
+                ],
+                [
+                    [[3.0], [2.0], [2.0]],
+                    [[3.0], [2.0], [2.0]],
+                    [[3.0], [2.0], [2.0]]
+                ]
+            ],
+            device
+        )
+        .unwrap()
+        .as_string(Some(false))
+        .unwrap()
+        .as_str()
+    );
 }

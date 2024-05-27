@@ -19,11 +19,11 @@ pub enum DType {
 impl Display for DType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DType::U8 => write!(f, "Dtype - u8"),
-            DType::U32 => write!(f, "Dtype - u32"),
-            DType::I64 => write!(f, "Dtype - i64"),
-            DType::F32 => write!(f, "Dtype - f32"),
-            DType::F64 => write!(f, "Dtype - f64"),
+            DType::U8 => write!(f, "u8"),
+            DType::U32 => write!(f, "u32"),
+            DType::I64 => write!(f, "i64"),
+            DType::F32 => write!(f, "f32"),
+            DType::F64 => write!(f, "f64"),
         }
     }
 }

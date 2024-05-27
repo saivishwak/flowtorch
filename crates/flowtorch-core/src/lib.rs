@@ -4,7 +4,7 @@ mod dtype;
 mod error;
 mod layout;
 mod ndarray;
-mod op;
+mod ops;
 mod shape;
 mod storage;
 mod tensor;

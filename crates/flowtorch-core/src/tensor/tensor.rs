@@ -10,16 +10,18 @@ use crate::{
     DType, Device, Error,
 };
 
+use super::utils;
+
 #[derive(Debug)]
-pub struct Tensor_ {
-    storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
-    layout: Layout,
-    device: Device,
+pub(crate) struct Tensor_ {
+    pub(crate) storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
+    pub(crate) layout: Layout,
+    pub(crate) device: Device,
     //op: Option<Op>,
 }
 
 #[derive(Debug)]
-pub struct Tensor(Arc<Tensor_>);
+pub struct Tensor(pub(crate) Arc<Tensor_>);
 
 impl Tensor {
     pub fn new<D>(array: D, device: &Device) -> Result<Self, Error>
@@ -96,7 +98,7 @@ impl Tensor {
     }
 
     /*
-    View is same as reshape
+    view is same as reshape
      */
     pub fn view<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, Error> {
         return self.reshape(shape);
@@ -135,5 +137,36 @@ impl Tensor {
     //Max number of elements in the Tensor
     pub fn elem_count(&self) -> usize {
         self.0.layout.get_shape().elem_count()
+    }
+
+    pub fn as_string(&self, truncate: Option<bool>) -> Result<String, String> {
+        //Reverse the dimensions order so that we construct the innermost dimension first
+        let dims = self.dims();
+        let strides = self.stride();
+
+        let storage = self.get_storage_ref();
+        let storage_data = *storage.cpu_get_raw();
+
+        if !self.0.layout.is_contiguous() {
+            return Err(String::from("Non Contigous layout not supported"));
+        }
+        let formatted_string = match storage_data {
+            crate::cpu_backend::CpuStorage::U8(data) => {
+                utils::as_string(data, dims, strides, truncate)
+            }
+            crate::cpu_backend::CpuStorage::U32(data) => {
+                utils::as_string(data, dims, strides, truncate)
+            }
+            crate::cpu_backend::CpuStorage::I64(data) => {
+                utils::as_string(data, dims, strides, truncate)
+            }
+            crate::cpu_backend::CpuStorage::F32(data) => {
+                utils::as_string(data, dims, strides, truncate)
+            }
+            crate::cpu_backend::CpuStorage::F64(data) => {
+                utils::as_string(data, dims, strides, truncate)
+            }
+        };
+        Ok(formatted_string)
     }
 }

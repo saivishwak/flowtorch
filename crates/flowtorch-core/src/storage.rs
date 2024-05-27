@@ -1,5 +1,9 @@
 use crate::{cpu_backend::CpuStorage, DType, Device};
 
+pub trait BaseStorage {
+    fn cpu_get_raw(&self) -> Box<&CpuStorage>;
+}
+
 #[derive(Debug, Clone)]
 pub enum Storage {
     Cpu(CpuStorage),
@@ -21,6 +25,14 @@ impl Storage {
                 CpuStorage::F32(_) => DType::F32,
                 CpuStorage::F64(_) => DType::F64,
             },
+        }
+    }
+
+    pub fn cpu_get_raw(&self) -> Box<&CpuStorage> {
+        match self {
+            Self::Cpu(storage) => {
+                return storage.cpu_get_raw();
+            }
         }
     }
 }

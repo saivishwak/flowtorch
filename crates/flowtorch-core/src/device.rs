@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::ndarray::NdArray;
 use crate::DeviceError;
 use crate::{cpu_backend::CpuDevice, dtype::WithDType, shape::Shape, storage::Storage, DType};
@@ -54,6 +56,14 @@ impl Device {
                     }
                 }
             }
+        }
+    }
+}
+
+impl Display for Device {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Cpu => write!(f, "cpu"),
         }
     }
 }

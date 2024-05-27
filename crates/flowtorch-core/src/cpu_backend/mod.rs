@@ -1,6 +1,6 @@
 mod error;
 
-use crate::{shape::Shape, DType, Error};
+use crate::{shape::Shape, storage::BaseStorage, DType, Error};
 pub use error::*;
 
 #[derive(Debug, Clone)]
@@ -119,6 +119,16 @@ impl CpuStorage {
             }
         };
         Ok(s)
+    }
+
+    fn get_raw(&self) -> Box<&CpuStorage> {
+        return Box::new(self);
+    }
+}
+
+impl BaseStorage for CpuStorage {
+    fn cpu_get_raw(&self) -> Box<&CpuStorage> {
+        self.get_raw()
     }
 }
 pub struct CpuDevice;

@@ -13,4 +13,4 @@ pub use device::Device;
 pub use dtype::DType;
 pub use error::*;
 pub use shape::Shape;
-pub use tensor::Tensor;
+pub use tensor::*;

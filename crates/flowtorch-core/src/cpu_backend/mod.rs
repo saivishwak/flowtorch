@@ -124,6 +124,32 @@ impl CpuStorage {
     fn get_raw(&self) -> Box<&CpuStorage> {
         return Box::new(self);
     }
+
+    pub fn equal(
+        &self,
+        other: &Self,
+        self_offset: (usize, usize),
+        other_offset: (usize, usize),
+    ) -> bool {
+        match (self, other) {
+            (Self::U8(self_data), Self::U8(other_data)) => {
+                compare_vecs(self_data, other_data, self_offset, other_offset)
+            }
+            (Self::U32(self_data), Self::U32(other_data)) => {
+                compare_vecs(self_data, other_data, self_offset, other_offset)
+            }
+            (Self::I64(self_data), Self::I64(other_data)) => {
+                compare_vecs(self_data, other_data, self_offset, other_offset)
+            }
+            (Self::F32(self_data), Self::F32(other_data)) => {
+                compare_vecs(self_data, other_data, self_offset, other_offset)
+            }
+            (Self::F64(self_data), Self::F64(other_data)) => {
+                compare_vecs(self_data, other_data, self_offset, other_offset)
+            }
+            _ => false,
+        }
+    }
 }
 
 impl BaseStorage for CpuStorage {
@@ -131,6 +157,24 @@ impl BaseStorage for CpuStorage {
         self.get_raw()
     }
 }
+
+// Helper function to compare vectors of any type
+fn compare_vecs<T: PartialEq>(
+    vec1: &Vec<T>,
+    vec2: &Vec<T>,
+    vec1_offset: (usize, usize),
+    vec2_offset: (usize, usize),
+) -> bool {
+    let vec1_start = vec1_offset.0;
+    let vec1_end = vec1_start + vec1_offset.1;
+    let vec2_start = vec2_offset.0;
+    let vec2_end = vec2_start + vec2_offset.1;
+    if vec1_end - vec1_start != vec2_end - vec2_start {
+        return false;
+    }
+    &vec1[vec1_start..vec1_end] == &vec2[vec2_start..vec2_end]
+}
+
 pub struct CpuDevice;
 
 impl CpuDevice {

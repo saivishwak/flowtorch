@@ -1,3 +1,5 @@
+use std::usize;
+
 use crate::{cpu_backend::CpuStorage, DType, Device};
 
 pub trait BaseStorage {
@@ -32,6 +34,19 @@ impl Storage {
         match self {
             Self::Cpu(storage) => {
                 return storage.cpu_get_raw();
+            }
+        }
+    }
+
+    pub fn equal(
+        &self,
+        other: &Self,
+        self_offset: (usize, usize),
+        other_offset: (usize, usize),
+    ) -> bool {
+        match (self, other) {
+            (Self::Cpu(self_data), Self::Cpu(other_data)) => {
+                self_data.equal(other_data, self_offset, other_offset)
             }
         }
     }

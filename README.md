@@ -12,7 +12,7 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add Proper Error Handling (https://github.com/dtolnay/thiserror)
 - [x] Add Arc and Rw::Lock for Storage in Tensor
 - [x] Implement Display for Tensor to print the matrix
-- [ ] Implement Indexing which return a tensor
+- [x] Implement Indexing which return a tensor
 - [ ] Study Torch7 Library and how Storage, Tensor is implemented
 - [ ] Get Method for accesssing elements
 - [ ] Add to_dtype method to convert the data type

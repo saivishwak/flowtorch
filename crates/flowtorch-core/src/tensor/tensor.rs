@@ -140,33 +140,51 @@ impl Tensor {
     }
 
     pub fn as_string(&self, truncate: Option<bool>) -> Result<String, String> {
-        //Reverse the dimensions order so that we construct the innermost dimension first
         let dims = self.dims();
         let strides = self.stride();
 
         let storage = self.get_storage_ref();
-        let storage_data = *storage.cpu_get_raw();
+
+        let binding = storage.cpu_get_raw();
+        let storage_data = binding.as_ref();
+        let initial_offset = self.0.layout.offset;
 
         if !self.0.layout.is_contiguous() {
             return Err(String::from("Non Contigous layout not supported"));
         }
         let formatted_string = match storage_data {
             crate::cpu_backend::CpuStorage::U8(data) => {
-                utils::as_string(data, dims, strides, truncate)
+                utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
             crate::cpu_backend::CpuStorage::U32(data) => {
-                utils::as_string(data, dims, strides, truncate)
+                utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
             crate::cpu_backend::CpuStorage::I64(data) => {
-                utils::as_string(data, dims, strides, truncate)
+                utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
             crate::cpu_backend::CpuStorage::F32(data) => {
-                utils::as_string(data, dims, strides, truncate)
+                utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
             crate::cpu_backend::CpuStorage::F64(data) => {
-                utils::as_string(data, dims, strides, truncate)
+                utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
         };
         Ok(formatted_string)
+    }
+}
+
+// Two tensors are euqal if their shapes are equal
+impl PartialEq for Tensor {
+    fn eq(&self, other: &Self) -> bool {
+        if self.shape() != other.shape() {
+            return false;
+        }
+        let self_storage = &*self.get_storage_ref();
+        let other_storage = &*other.get_storage_ref();
+        let self_offset = (self.0.layout.offset, self.elem_count());
+        let other_offset = (other.0.layout.offset, other.elem_count());
+
+        //Element wise comparision
+        return self_storage.equal(other_storage, self_offset, other_offset);
     }
 }

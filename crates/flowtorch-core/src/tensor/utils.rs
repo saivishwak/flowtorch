@@ -25,10 +25,21 @@ pub fn as_string<T: std::fmt::Display>(
     dims: Vec<usize>,
     strides: Vec<usize>,
     truncate: Option<bool>,
+    initial_offset: usize,
 ) -> String {
     let mut result = String::new();
-    let dims: Vec<_> = dims.iter().rev().collect();
+    let dims: Vec<_> = dims.iter().rev().collect(); //Reverse the dimensions order so that we construct the innermost dimension first
     let strides: Vec<_> = strides.iter().rev().collect();
+
+    if data.len() == 0 {
+        return result;
+    }
+
+    //Scalar value
+    if dims.len() == 0 {
+        result.push_str(format!("{}", data[initial_offset]).as_str());
+        return result;
+    }
     let last_dim = dims[0];
 
     for _ in 0..dims.len() {
@@ -39,8 +50,9 @@ pub fn as_string<T: std::fmt::Display>(
     let mut truncated = false;
     let (should_truncate, truncation_start_offset) = can_truncate(truncate, data.len());
 
-    let mut i = 0;
-    while i < data.len() {
+    let total_num_elems: usize = dims.iter().map(|d| *d).product::<usize>();
+    let mut i = initial_offset;
+    while i < data.len() && i < total_num_elems {
         result.push_str(format!("{}", data[i]).as_str());
 
         // In each dimension should we end the subarray with ']'

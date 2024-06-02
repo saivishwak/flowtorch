@@ -83,7 +83,7 @@ impl Tensor {
             None => PrintOptions::new(),
         };
         let layout = self.layout().clone();
-        let storage = self.get_storage_ref();
+        let storage = self.storage();
         let binding = storage.cpu_get_raw();
         let cpu_storage_data = binding.as_ref();
 
@@ -170,14 +170,18 @@ pub fn fmt_tensor_as_string<T: std::fmt::Display>(
         let dim_end_len = dims
             .iter()
             .zip(&strides)
-            .filter(|&(dim, stride)| (i + 1) % (*dim * (*stride)) == 0)
+            .filter(|&(dim, stride)| (i + 1 - layout.start_offset()) % (*dim * (*stride)) == 0)
             .count();
 
         if dim_end_len > 0 {
             for _ in 0..dim_end_len {
                 result.push_str("]"); //Put in the ']' for all ending places like [1]
             }
-            sub_array_end_detected = true;
+            if count + 1 < num_elms {
+                sub_array_end_detected = true;
+            } else {
+                sub_array_end_detected = false;
+            }
         } else {
             sub_array_end_detected = false;
         }
@@ -186,11 +190,13 @@ pub fn fmt_tensor_as_string<T: std::fmt::Display>(
             result.push_str(", "); // If the index is not last add ','
 
             if sub_array_end_detected {
+                //Add '[' to the next subarray
                 for _k in 0..dim_end_len {
                     result.push_str("[");
                 }
             }
         }
+
         i += 1;
         count += 1;
     }

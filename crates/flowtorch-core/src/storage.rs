@@ -1,6 +1,4 @@
-use std::usize;
-
-use crate::{cpu_backend::CpuStorage, DType, Device};
+use crate::{cpu_backend::CpuStorage, layout::Layout, DType, Device, Error};
 
 pub trait BaseStorage {
     fn cpu_get_raw(&self) -> Box<&CpuStorage>;
@@ -45,8 +43,21 @@ impl Storage {
         other_offset: (usize, usize),
     ) -> bool {
         match (self, other) {
-            (Self::Cpu(self_data), Self::Cpu(other_data)) => {
-                self_data.equal(other_data, self_offset, other_offset)
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
+        }
+    }
+
+    pub(crate) fn index_select(
+        &self,
+        other: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+        dim: usize,
+    ) -> Result<Self, Error> {
+        match (self, other) {
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
+                let storage = lhs.index_select(rhs, lhs_layout, rhs_layout, dim)?;
+                Ok(Storage::Cpu(storage))
             }
         }
     }

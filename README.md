@@ -14,17 +14,17 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Implement Display for Tensor to print the matrix
 - [x] Implement Indexing which return a tensor
 - [x] Refactor indexing
-- [ ] Add tuple with any number of elements for indexing
-- [ ] Fix Pretty Printing of Tensor
+- [x] Add tuple with range indexing
+- [x] Fix Pretty Printing of Tensor
 - [ ] Add Basic Ops to Tensor along with Dotproduct
 - [ ] Add to_dtype method to convert the data type
-- [ ] Get Method for accesssing elements
-- [ ] Study Torch7 Library and how Storage, Tensor is implemented
+- [ ] Fix select_index method
+- [ ] Fix Display with PrintOptions
 - [ ] Add CUDA Device support
 - [ ] Add to_device method support for converting the device of Tensor
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Support Fotran Memory layout (colum Major)
-
+- [ ] Study Torch7 Library and how Storage, Tensor is implemented
 
 ===
 

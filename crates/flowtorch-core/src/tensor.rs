@@ -93,8 +93,8 @@ impl Tensor {
         //Right now Reshape is only supported for contiguous Tensor.
         // The Arc<RwLock<Storage>> ensures that the clone does not create new data in heap
         if self.is_layout_contiguous() {
-            let storage = self.get_storage_clone();
-            let device = self.get_storage_ref().device();
+            let storage = self.storage.clone();
+            let device = self.storage().device();
             let tensor_ = Tensor_ {
                 storage,
                 layout: Layout::contiguous_with_offset(shape, self.layout.start_offset()),
@@ -164,13 +164,29 @@ impl Tensor {
         }
     }
 
+    //This returns a new storage, does not point to same storage like self
+    pub fn index_select(&self, dim: usize, indexes: &Self) -> Result<Self, Error> {
+        if indexes.rank() != 1 {
+            return Err(Error::Unknown);
+        }
+
+        let indexes_len = indexes.dims().len();
+        let mut dims = self.dims().to_vec();
+        dims[dim] = indexes_len;
+
+        let storage =
+            self.storage()
+                .index_select(&indexes.storage(), &self.layout, &indexes.layout, dim)?;
+        return Self::from_storage(storage, Shape::from(dims));
+    }
+
     // Two tensors are euqal if their shapes and elements are equal
     pub fn equal(&self, other: &Self) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
-        let self_storage = &*self.get_storage_ref();
-        let other_storage = &*other.get_storage_ref();
+        let self_storage = &*self.storage();
+        let other_storage = &*other.storage();
         let self_offset = (self.layout.start_offset(), self.elem_count());
         let other_offset = (other.layout.start_offset(), other.elem_count());
 
@@ -180,13 +196,8 @@ impl Tensor {
 
     /* Access Methods */
 
-    pub fn get_storage_ref(&self) -> std::sync::RwLockReadGuard<Storage> {
-        let storage = self.0.storage.read().unwrap(); //Need to do better error handling here, instead of unwrap
-        return storage;
-    }
-
-    pub(crate) fn get_storage_clone(&self) -> Arc<RwLock<Storage>> {
-        self.storage.clone()
+    pub fn storage(&self) -> std::sync::RwLockReadGuard<'_, Storage> {
+        self.storage.read().unwrap()
     }
 
     pub fn dims(&self) -> Vec<usize> {
@@ -194,7 +205,7 @@ impl Tensor {
     }
 
     pub fn dtype(&self) -> DType {
-        self.get_storage_ref().dtype()
+        self.storage().dtype()
     }
 
     pub fn device(&self) -> Device {

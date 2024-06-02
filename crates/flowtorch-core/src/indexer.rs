@@ -1,3 +1,7 @@
+use std::ops::{
+    Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+};
+
 use crate::{Error, Tensor};
 
 impl Tensor {
@@ -8,10 +12,28 @@ impl Tensor {
             ))); //Not supported as of now
         }
 
+        let shape = self.shape();
+        let dims = shape.dims();
         let mut out = self.clone();
-        for (_i, index) in indices.iter().enumerate() {
+        let mut current_dim = 0;
+        for (i, index) in indices.iter().enumerate() {
             out = match index {
                 TensorIdx::Select(val) => out.narrow(0, *val, 1)?.squeeze(0)?,
+                TensorIdx::Narrow(left_bound, right_bound) => {
+                    let start = match left_bound {
+                        Bound::Included(n) => *n,
+                        Bound::Excluded(n) => *n + 1,
+                        Bound::Unbounded => 0,
+                    };
+                    let stop = match right_bound {
+                        Bound::Included(n) => *n + 1,
+                        Bound::Excluded(n) => *n,
+                        Bound::Unbounded => dims[i],
+                    };
+                    let x = out.narrow(current_dim, start, stop.saturating_sub(start))?;
+                    current_dim += 1;
+                    x
+                }
             };
         }
 
@@ -34,11 +56,37 @@ where
 
 pub enum TensorIdx {
     Select(usize),
+    Narrow(Bound<usize>, Bound<usize>),
 }
 
 impl From<usize> for TensorIdx {
     fn from(value: usize) -> Self {
         TensorIdx::Select(value)
+    }
+}
+
+trait RB: RangeBounds<usize> {}
+impl RB for Range<usize> {}
+impl RB for RangeFrom<usize> {}
+impl RB for RangeFull {}
+impl RB for RangeInclusive<usize> {}
+impl RB for RangeTo<usize> {}
+impl RB for RangeToInclusive<usize> {}
+
+impl<T: RB> From<T> for TensorIdx {
+    fn from(range: T) -> Self {
+        use std::ops::Bound::*;
+        let start = match range.start_bound() {
+            Included(idx) => Included(*idx),
+            Excluded(idx) => Excluded(*idx),
+            Unbounded => Unbounded,
+        };
+        let end = match range.end_bound() {
+            Included(idx) => Included(*idx),
+            Excluded(idx) => Excluded(*idx),
+            Unbounded => Unbounded,
+        };
+        TensorIdx::Narrow(start, end)
     }
 }
 

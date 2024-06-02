@@ -1,6 +1,6 @@
 mod error;
 
-use crate::{shape::Shape, storage::BaseStorage, DType, Error};
+use crate::{layout::Layout, shape::Shape, storage::BaseStorage, DType, Error};
 pub use error::*;
 
 #[derive(Debug, Clone)]
@@ -127,28 +127,39 @@ impl CpuStorage {
 
     pub(super) fn equal(
         &self,
-        other: &Self,
-        self_offset: (usize, usize),
-        other_offset: (usize, usize),
+        rhs: &Self,
+        lhs_offset: (usize, usize),
+        rhs_offset: (usize, usize),
     ) -> bool {
-        match (self, other) {
-            (Self::U8(self_data), Self::U8(other_data)) => {
-                compare_vecs(self_data, other_data, self_offset, other_offset)
+        match (self, rhs) {
+            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
-            (Self::U32(self_data), Self::U32(other_data)) => {
-                compare_vecs(self_data, other_data, self_offset, other_offset)
+            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
-            (Self::I64(self_data), Self::I64(other_data)) => {
-                compare_vecs(self_data, other_data, self_offset, other_offset)
+            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
-            (Self::F32(self_data), Self::F32(other_data)) => {
-                compare_vecs(self_data, other_data, self_offset, other_offset)
+            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
-            (Self::F64(self_data), Self::F64(other_data)) => {
-                compare_vecs(self_data, other_data, self_offset, other_offset)
+            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
             _ => false,
         }
+    }
+
+    //TODO - Implement index_select
+    pub(crate) fn index_select(
+        &self,
+        _rhs: &Self,
+        _lhs_layout: &Layout,
+        _rhs_layout: &Layout,
+        _dim: usize,
+    ) -> Result<CpuStorage, Error> {
+        todo!()
     }
 }
 

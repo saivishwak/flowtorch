@@ -5,6 +5,7 @@ use crate::{
     dtype::WithDType,
     layout::{Layout, Stride},
     ndarray::NdArray,
+    ops::Op,
     shape::Shape,
     storage::Storage,
     DType, Device, Error, ShapeError,
@@ -15,7 +16,8 @@ pub struct Tensor_ {
     storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
     layout: Layout,
     device: Device,
-    //op: Option<Op>,
+    #[allow(dead_code)]
+    op: Option<Op>,
 }
 
 #[derive(Debug, Clone)]
@@ -38,19 +40,19 @@ impl Tensor {
     {
         let shape = array.shape()?;
         let storage = device.from_array(array)?;
-        return Self::from_storage(storage, shape);
+        return Self::from_storage(storage, shape, None);
     }
 
     pub fn zeros<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.zeros(&shape, dtype)?;
-        return Self::from_storage(storage, shape);
+        return Self::from_storage(storage, shape, None);
     }
 
     pub fn ones<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.ones(&shape, dtype)?;
-        return Self::from_storage(storage, shape);
+        return Self::from_storage(storage, shape, None);
     }
 
     pub fn from_vec<S: Into<Shape>, D: WithDType>(
@@ -67,15 +69,20 @@ impl Tensor {
             ));
         }
         let storage = device.storage_owned(data)?;
-        return Self::from_storage(storage, shape);
+        return Self::from_storage(storage, shape, None);
     }
 
-    fn from_storage<S: Into<Shape>>(storage: Storage, shape: S) -> Result<Self, Error> {
+    fn from_storage<S: Into<Shape>>(
+        storage: Storage,
+        shape: S,
+        op: Option<Op>,
+    ) -> Result<Self, Error> {
         let device = storage.device();
         let tensor_ = Tensor_ {
             storage: Arc::new(RwLock::new(storage)),
             layout: Layout::contiguous(shape),
             device,
+            op,
         };
         Ok(Tensor(Arc::new(tensor_)))
     }
@@ -99,6 +106,7 @@ impl Tensor {
                 storage,
                 layout: Layout::contiguous_with_offset(shape, self.layout.start_offset()),
                 device,
+                op: None,
             };
             return Ok(Tensor(Arc::new(tensor_)));
         }
@@ -141,6 +149,7 @@ impl Tensor {
                 storage: self.storage.clone(),
                 layout,
                 device: self.device.clone(),
+                op: None,
             };
             Ok(Tensor(Arc::new(tensor_)))
         }
@@ -157,6 +166,7 @@ impl Tensor {
                 storage: self.storage.clone(),
                 layout: Layout::new(dims.into(), strides, self.layout.start_offset()),
                 device: self.device.clone(),
+                op: None,
             };
             Ok(Tensor(Arc::new(tensor_)))
         } else {
@@ -177,8 +187,10 @@ impl Tensor {
         let storage =
             self.storage()
                 .index_select(&indexes.storage(), &self.layout, &indexes.layout, dim)?;
-        return Self::from_storage(storage, Shape::from(dims));
+        return Self::from_storage(storage, Shape::from(dims), None);
     }
+
+    /* Binary Ops */
 
     // Two tensors are euqal if their shapes and elements are equal
     pub fn equal(&self, other: &Self) -> bool {
@@ -192,6 +204,34 @@ impl Tensor {
 
         //Element wise comparision
         return self_storage.equal(other_storage, self_offset, other_offset);
+    }
+
+    pub fn add_(&self, rhs: &Self) -> Result<Self, Error> {
+        if self.shape() != rhs.shape() {
+            return Err(Error::Unknown);
+        }
+        let lhs_storage = &*self.storage();
+        let rhs_storage = &*rhs.storage();
+        let new_storage = lhs_storage.add(rhs_storage)?;
+        return Self::from_storage(
+            new_storage,
+            self.shape().clone(),
+            Some(Op::Add(self.clone(), rhs.clone())),
+        );
+    }
+
+    pub fn mul_(&self, rhs: &Self) -> Result<Self, Error> {
+        if self.shape() != rhs.shape() {
+            return Err(Error::Unknown);
+        }
+        let lhs_storage = &*self.storage();
+        let rhs_storage = &*rhs.storage();
+        let new_storage = lhs_storage.mul(rhs_storage)?;
+        return Self::from_storage(
+            new_storage,
+            self.shape().clone(),
+            Some(Op::Mul(self.clone(), rhs.clone())),
+        );
     }
 
     /* Access Methods */

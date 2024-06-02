@@ -36,17 +36,6 @@ impl Storage {
         }
     }
 
-    pub fn equal(
-        &self,
-        other: &Self,
-        self_offset: (usize, usize),
-        other_offset: (usize, usize),
-    ) -> bool {
-        match (self, other) {
-            (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
-        }
-    }
-
     pub(crate) fn index_select(
         &self,
         other: &Self,
@@ -57,6 +46,35 @@ impl Storage {
         match (self, other) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => {
                 let storage = lhs.index_select(rhs, lhs_layout, rhs_layout, dim)?;
+                Ok(Storage::Cpu(storage))
+            }
+        }
+    }
+
+    pub(crate) fn equal(
+        &self,
+        other: &Self,
+        self_offset: (usize, usize),
+        other_offset: (usize, usize),
+    ) -> bool {
+        match (self, other) {
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
+        }
+    }
+
+    pub(crate) fn add(&self, rhs: &Self) -> Result<Self, Error> {
+        match (self, rhs) {
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
+                let storage = lhs.add(rhs)?;
+                Ok(Storage::Cpu(storage))
+            }
+        }
+    }
+
+    pub(crate) fn mul(&self, rhs: &Self) -> Result<Self, Error> {
+        match (self, rhs) {
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
+                let storage = lhs.mul(rhs)?;
                 Ok(Storage::Cpu(storage))
             }
         }

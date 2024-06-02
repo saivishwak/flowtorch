@@ -1,5 +1,7 @@
 mod error;
 
+use std::ops::{Add, Mul};
+
 use crate::{layout::Layout, shape::Shape, storage::BaseStorage, DType, Error};
 pub use error::*;
 
@@ -151,8 +153,54 @@ impl CpuStorage {
         }
     }
 
+    pub(super) fn add(&self, rhs: &Self) -> Result<CpuStorage, Error> {
+        match (self, rhs) {
+            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
+                return Ok(CpuStorage::U8(add_vec(lhs_data, rhs_data)));
+            }
+            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
+                return Ok(CpuStorage::U32(add_vec(lhs_data, rhs_data)));
+            }
+            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
+                return Ok(CpuStorage::I64(add_vec(lhs_data, rhs_data)));
+            }
+            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
+                return Ok(CpuStorage::F32(add_vec(lhs_data, rhs_data)));
+            }
+            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
+                return Ok(CpuStorage::F64(add_vec(lhs_data, rhs_data)));
+            }
+            _ => {
+                return Err(Error::Unknown);
+            }
+        }
+    }
+
+    pub(super) fn mul(&self, rhs: &Self) -> Result<CpuStorage, Error> {
+        match (self, rhs) {
+            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
+                return Ok(CpuStorage::U8(mul_vec(lhs_data, rhs_data)));
+            }
+            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
+                return Ok(CpuStorage::U32(mul_vec(lhs_data, rhs_data)));
+            }
+            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
+                return Ok(CpuStorage::I64(mul_vec(lhs_data, rhs_data)));
+            }
+            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
+                return Ok(CpuStorage::F32(mul_vec(lhs_data, rhs_data)));
+            }
+            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
+                return Ok(CpuStorage::F64(mul_vec(lhs_data, rhs_data)));
+            }
+            _ => {
+                return Err(Error::Unknown);
+            }
+        }
+    }
+
     //TODO - Implement index_select
-    pub(crate) fn index_select(
+    pub(super) fn index_select(
         &self,
         _rhs: &Self,
         _lhs_layout: &Layout,
@@ -212,4 +260,18 @@ impl CpuDevice {
             DType::I64 => Ok(CpuStorage::I64(vec![1i64; num_elements])),
         }
     }
+}
+
+fn add_vec<T>(vec1: &Vec<T>, vec2: &Vec<T>) -> Vec<T>
+where
+    T: Add<Output = T> + Copy,
+{
+    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a + *b).collect()
+}
+
+fn mul_vec<T>(vec1: &Vec<T>, vec2: &Vec<T>) -> Vec<T>
+where
+    T: Mul<Output = T> + Copy,
+{
+    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a * *b).collect()
 }

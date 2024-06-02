@@ -16,10 +16,11 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Refactor indexing
 - [x] Add tuple with range indexing
 - [x] Fix Pretty Printing of Tensor
+- [ ] Fix Display with PrintOptions
+- [ ] Add macros and optimze code for ops
 - [ ] Add Basic Ops to Tensor along with Dotproduct
 - [ ] Add to_dtype method to convert the data type
 - [ ] Fix select_index method
-- [ ] Fix Display with PrintOptions
 - [ ] Add CUDA Device support
 - [ ] Add to_device method support for converting the device of Tensor
 - [ ] Add Tensor.to_vec methods, to get different dim vectors

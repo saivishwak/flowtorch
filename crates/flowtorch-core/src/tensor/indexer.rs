@@ -1,78 +1,65 @@
-use crate::{layout::Layout, tensor::Tensor_, Error, Tensor};
-use std::sync::Arc;
+use crate::{Error, Tensor};
 
 impl Tensor {
-    pub fn i<T: Into<TensorIdx>>(&self, idx: T) -> Result<Tensor, Error> {
+    fn index(&self, indices: &[TensorIdx]) -> Result<Self, Error> {
         if !self.is_layout_contiguous() {
             return Err(Error::Index(String::from(
                 "Non Contiguous layout not supported yet!",
             ))); //Not supported as of now
         }
-        //Initial offfset
-        let mut offset = self.offset();
-        let idx: TensorIdx = idx.into(); //Safe to call into directly
-        let idx_vec = idx.0;
-        let dims = self.dims();
-        let strides = self.stride();
 
-        if idx_vec.len() == 0 {
-            return Err(Error::Index(String::from("Index value cannot be empty.")));
+        let mut out = self.clone();
+        for (_i, index) in indices.iter().enumerate() {
+            out = match index {
+                TensorIdx::Select(val) => out.narrow(0, *val, 1)?.squeeze(0)?,
+            };
         }
-        if idx_vec.len() > dims.len() {
-            return Err(Error::Index(String::from(
-                "Dimentionality mismatch of index and Tensor Dim.",
-            )));
-        }
-        //Check overflow in each dim
-        for i in 0..idx_vec.len() {
-            if idx_vec[i] >= dims[i] {
-                return Err(Error::Index(format!("Overflow occured at Dimension {}", i)));
+
+        Ok(out)
+    }
+}
+
+pub trait IndexOp<T> {
+    fn i(&self, index: T) -> Result<Tensor, Error>;
+}
+
+impl<T> IndexOp<T> for Tensor
+where
+    T: Into<TensorIdx>,
+{
+    fn i(&self, index: T) -> Result<Tensor, Error> {
+        self.index(&[index.into()])
+    }
+}
+
+pub enum TensorIdx {
+    Select(usize),
+}
+
+impl From<usize> for TensorIdx {
+    fn from(value: usize) -> Self {
+        TensorIdx::Select(value)
+    }
+}
+
+macro_rules! index_op_tuple {
+    ($($t:ident),+) => {
+        #[allow(non_snake_case)]
+        impl<$($t),*> IndexOp<($($t,)*)> for Tensor
+        where
+            $($t: Into<TensorIdx>,)*
+        {
+            fn i(&self, ($($t,)*): ($($t,)*)) -> Result<Tensor, Error> {
+                self.index(&[$($t.into(),)*])
             }
         }
-
-        let storage = self.get_storage_clone();
-
-        let shape = dims
-            .iter()
-            .skip(idx_vec.len())
-            .map(|&v| v)
-            .collect::<Vec<usize>>();
-
-        //Calculate offset
-        for i in 0..idx_vec.len() {
-            offset += strides[i] * idx_vec[i];
-        }
-
-        let device = self.get_storage_ref().device();
-        let tensor_ = Tensor_ {
-            storage,
-            layout: Layout::contiguous_with_offset(shape, offset),
-            device,
-        };
-        Ok(Tensor(Arc::new(tensor_)))
-    }
+    };
 }
 
-pub struct TensorIdx(Vec<usize>);
-
-impl From<Vec<usize>> for TensorIdx {
-    fn from(value: Vec<usize>) -> Self {
-        TensorIdx(Vec::from(value))
-    }
-}
-
-//TODO Add more dimension support
-impl From<(usize,)> for TensorIdx {
-    fn from(value: (usize,)) -> Self {
-        let dim1 = value.0;
-        TensorIdx(vec![dim1])
-    }
-}
-
-impl From<(usize, usize)> for TensorIdx {
-    fn from(value: (usize, usize)) -> Self {
-        let dim1 = value.0;
-        let dim2 = value.1;
-        TensorIdx(vec![dim1, dim2])
-    }
-}
+// Generate implementations for tuples of different lengths
+index_op_tuple!(T0);
+index_op_tuple!(T0, T1);
+index_op_tuple!(T0, T1, T2);
+index_op_tuple!(T0, T1, T2, T3);
+index_op_tuple!(T0, T1, T2, T3, T4);
+index_op_tuple!(T0, T1, T2, T3, T4, T5);

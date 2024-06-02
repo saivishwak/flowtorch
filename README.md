@@ -15,6 +15,7 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Implement Indexing which return a tensor
 - [x] Refactor indexing
 - [ ] Add tuple with any number of elements for indexing
+- [ ] Fix Pretty Printing of Tensor
 - [ ] Add Basic Ops to Tensor along with Dotproduct
 - [ ] Add to_dtype method to convert the data type
 - [ ] Get Method for accesssing elements

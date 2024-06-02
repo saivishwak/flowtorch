@@ -1,39 +1,44 @@
 #![allow(dead_code)]
-use crate::shape::Shape;
+
+use crate::{shape::Shape, Error, ShapeError};
 
 pub type Stride = Vec<usize>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Layout {
     shape: Shape,
     stride: Stride,
-    pub offset: usize,
+    start_offset: usize,
 }
 
 impl Layout {
-    pub fn new(shape: Shape, stride: Vec<usize>, offset: usize) -> Self {
+    pub fn new(shape: Shape, stride: Vec<usize>, start_offset: usize) -> Self {
         Self {
             shape,
             stride,
-            offset,
+            start_offset,
         }
     }
 
-    pub fn get_shape(&self) -> Shape {
+    pub fn shape(&self) -> Shape {
         self.shape.clone()
     }
 
-    pub fn get_stride(&self) -> Stride {
+    pub fn stride(&self) -> Stride {
         self.stride.clone()
     }
 
-    pub fn contiguous_with_offset<S: Into<Shape>>(shape: S, offset: usize) -> Self {
+    pub fn start_offset(&self) -> usize {
+        self.start_offset
+    }
+
+    pub fn contiguous_with_offset<S: Into<Shape>>(shape: S, start_offset: usize) -> Self {
         let shape = shape.into();
         let stride = shape.stride_contiguous();
         Self {
             shape,
             stride,
-            offset,
+            start_offset,
         }
     }
 
@@ -44,5 +49,22 @@ impl Layout {
     // Return true if the array is C contiguous (aka Row Major)
     pub fn is_contiguous(&self) -> bool {
         return self.shape.is_contiguous(&self.stride);
+    }
+
+    pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {
+        let dims = self.shape.dims();
+        if dim >= dims.len() {
+            return Err(Error::Shape(ShapeError::Narrow(String::from(
+                "Dim not in current Dimenesions.",
+            ))));
+        }
+        let mut dims = dims.to_vec();
+        dims[dim] = len;
+
+        Ok(Self {
+            shape: Shape::from(dims),
+            stride: self.stride.clone(),
+            start_offset: self.start_offset + self.stride[dim] * start,
+        })
     }
 }

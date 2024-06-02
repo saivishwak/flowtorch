@@ -36,6 +36,7 @@ pub enum ShapeError {
     EmptyShape,
     ShapeMismatch,
     ReshapeError(String),
+    Narrow(String),
     CustomError,
 }
 
@@ -46,6 +47,7 @@ impl Display for ShapeError {
             Self::ShapeMismatch => write!(f, "Shape Mismatch"),
             Self::CustomError => write!(f, "{}", self),
             Self::ReshapeError(msg) => write!(f, "{}", msg),
+            Self::Narrow(msg) => write!(f, "{}", msg),
         }
     }
 }

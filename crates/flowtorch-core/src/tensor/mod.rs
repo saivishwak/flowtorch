@@ -1,8 +1,7 @@
-mod constants;
+mod display;
 mod indexer;
-mod out;
 mod tensor;
-mod utils;
 
-pub use indexer::TensorIdx;
+pub use display::{PrintOptions, PrintProfiles};
+pub use indexer::*;
 pub use tensor::*;

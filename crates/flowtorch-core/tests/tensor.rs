@@ -1,6 +1,6 @@
 use std::vec;
 
-use flowtorch_core::{DType, Device, Shape, Tensor};
+use flowtorch_core::{DType, Device, IndexOp, PrintOptions, Shape, Tensor};
 
 fn zeros(device: &Device, dtype: DType) -> Result<Tensor, ()> {
     let s: &[usize] = &[5, 2];
@@ -247,12 +247,14 @@ fn dtype() -> Result<(), ()> {
 
 #[test]
 fn format() {
+    let mut print_options = PrintOptions::new();
+    print_options.set_precision(0);
     let device = &Device::Cpu;
     assert_eq!(
         "[0]",
         Tensor::from_vec(vec![0i64], (1,), device)
             .unwrap()
-            .as_string(Some(false))
+            .fmt(Some(print_options.clone()))
             .unwrap()
             .as_str()
     );
@@ -260,7 +262,7 @@ fn format() {
         "[1]",
         Tensor::from_vec(vec![1.0], (1,), device)
             .unwrap()
-            .as_string(Some(false))
+            .fmt(Some(print_options.clone()))
             .unwrap()
             .as_str()
     );
@@ -268,7 +270,7 @@ fn format() {
         "[1, 2, 3]",
         Tensor::new(&[1.0, 2.0, 3.0], device)
             .unwrap()
-            .as_string(Some(false))
+            .fmt(Some(print_options.clone()))
             .unwrap()
             .as_str()
     );
@@ -283,7 +285,7 @@ fn format() {
             device
         )
         .unwrap()
-        .as_string(Some(false))
+        .fmt(Some(print_options.clone()))
         .unwrap()
         .as_str()
     );
@@ -291,7 +293,7 @@ fn format() {
         "[[[1], [1]]]",
         Tensor::new(&[[[1.0f32], [1.0]]], device)
             .unwrap()
-            .as_string(Some(false))
+            .fmt(Some(print_options.clone()))
             .unwrap()
             .as_str()
     );
@@ -318,7 +320,7 @@ fn format() {
             device
         )
         .unwrap()
-        .as_string(Some(false))
+        .fmt(Some(print_options.clone()))
         .unwrap()
         .as_str()
     );
@@ -327,7 +329,7 @@ fn format() {
         "[0, 0, 0]",
         Tensor::zeros(3, DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 
@@ -335,7 +337,7 @@ fn format() {
         "[1, 1, 1]",
         Tensor::ones(3, DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 
@@ -343,7 +345,7 @@ fn format() {
         "[[1], [1], [1]]",
         Tensor::ones((3, 1), DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 
@@ -351,7 +353,7 @@ fn format() {
         "[[0], [0], [0]]",
         Tensor::zeros((3, 1), DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 
@@ -359,7 +361,7 @@ fn format() {
         "[[[0, 0]], [[0, 0]], [[0, 0]]]",
         Tensor::zeros((3, 1, 2), DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 
@@ -367,7 +369,7 @@ fn format() {
         "[[[1, 1]], [[1, 1]], [[1, 1]]]",
         Tensor::ones((3, 1, 2), DType::F64, device)
             .unwrap()
-            .as_string(None)
+            .fmt(Some(print_options.clone()))
             .unwrap()
     );
 }
@@ -391,7 +393,7 @@ fn indexer() {
     assert_eq!(
         Tensor::new(&[0.0, 1.0, 2.0], &device)
             .unwrap()
-            .i(vec![1])
+            .i(1)
             .unwrap(),
         Tensor::new(1.0, &device).unwrap()
     );
@@ -399,21 +401,21 @@ fn indexer() {
     assert_ne!(
         Tensor::new(&[0.0f32, 1.0, 2.0], &device)
             .unwrap()
-            .i(vec![1])
+            .i(1)
             .unwrap(),
         Tensor::new(1.0f64, &device).unwrap()
     );
     assert_eq!(
         Tensor::new(vec![vec![vec![&[0.0], &[1.0], &[2.0]]]], &device)
             .unwrap()
-            .i(vec![0, 0, 1, 0])
+            .i((0, 0, 1, 0))
             .unwrap(),
         Tensor::new(1.0, &device).unwrap()
     );
     assert_eq!(
         Tensor::new(vec![vec![vec![&[0.0], &[1.0], &[2.0]]]], &device)
             .unwrap()
-            .i(vec![0, 0, 2, 0])
+            .i((0, 0, 2, 0))
             .unwrap(),
         Tensor::new(2.0, &device).unwrap()
     );

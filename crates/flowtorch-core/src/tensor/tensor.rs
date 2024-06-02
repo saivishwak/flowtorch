@@ -7,23 +7,31 @@ use crate::{
     ndarray::NdArray,
     shape::Shape,
     storage::Storage,
-    DType, Device, Error,
+    DType, Device, Error, ShapeError,
 };
 
-use super::utils;
-
-#[derive(Debug)]
-pub(crate) struct Tensor_ {
-    pub(crate) storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
-    pub(crate) layout: Layout,
-    pub(crate) device: Device,
+#[derive(Debug, Clone)]
+pub struct Tensor_ {
+    storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
+    layout: Layout,
+    device: Device,
     //op: Option<Op>,
 }
 
-#[derive(Debug)]
-pub struct Tensor(pub(crate) Arc<Tensor_>);
+#[derive(Debug, Clone)]
+pub struct Tensor(Arc<Tensor_>);
+
+impl std::ops::Deref for Tensor {
+    type Target = Tensor_;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref()
+    }
+}
 
 impl Tensor {
+    /* Creation Ops */
+
     pub fn new<D>(array: D, device: &Device) -> Result<Self, Error>
     where
         D: NdArray,
@@ -72,6 +80,8 @@ impl Tensor {
         Ok(Tensor(Arc::new(tensor_)))
     }
 
+    /* Indexing, Slicing Ops */
+
     pub fn reshape<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, Error> {
         let shape: Shape = shape.into();
         if shape.elem_count() != self.elem_count() {
@@ -87,7 +97,7 @@ impl Tensor {
             let device = self.get_storage_ref().device();
             let tensor_ = Tensor_ {
                 storage,
-                layout: Layout::contiguous_with_offset(shape, self.offset()),
+                layout: Layout::contiguous_with_offset(shape, self.layout.start_offset()),
                 device,
             };
             return Ok(Tensor(Arc::new(tensor_)));
@@ -104,13 +114,79 @@ impl Tensor {
         return self.reshape(shape);
     }
 
+    /**
+     * Implementation similar to https://pytorch.org/docs/stable/generated/torch.narrow.html
+     */
+    pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {
+        let shape = self.shape();
+        let dims = shape.dims();
+
+        if start > dims[dim] {
+            return Err(Error::Shape(ShapeError::Narrow(String::from(
+                "Start > Dimension length",
+            ))));
+        }
+
+        if (start + len) > dims[dim] {
+            return Err(Error::Shape(ShapeError::Narrow(String::from(
+                "Start + Length > Dimension length",
+            ))));
+        }
+
+        if start == 0 && dims[dim] == len {
+            Ok(self.clone())
+        } else {
+            let layout = self.layout.narrow(dim, start, len)?;
+            let tensor_ = Tensor_ {
+                storage: self.storage.clone(),
+                layout,
+                device: self.device.clone(),
+            };
+            Ok(Tensor(Arc::new(tensor_)))
+        }
+    }
+
+    pub fn squeeze(&self, dim: usize) -> Result<Self, Error> {
+        let dims = self.dims();
+        if dims[dim] == 1 {
+            let mut dims = dims.to_vec();
+            let mut strides = self.stride().to_vec();
+            dims.remove(dim);
+            strides.remove(dim);
+            let tensor_ = Tensor_ {
+                storage: self.storage.clone(),
+                layout: Layout::new(dims.into(), strides, self.layout.start_offset()),
+                device: self.device.clone(),
+            };
+            Ok(Tensor(Arc::new(tensor_)))
+        } else {
+            Ok(self.clone())
+        }
+    }
+
+    // Two tensors are euqal if their shapes and elements are equal
+    pub fn equal(&self, other: &Self) -> bool {
+        if self.shape() != other.shape() {
+            return false;
+        }
+        let self_storage = &*self.get_storage_ref();
+        let other_storage = &*other.get_storage_ref();
+        let self_offset = (self.layout.start_offset(), self.elem_count());
+        let other_offset = (other.layout.start_offset(), other.elem_count());
+
+        //Element wise comparision
+        return self_storage.equal(other_storage, self_offset, other_offset);
+    }
+
+    /* Access Methods */
+
     pub fn get_storage_ref(&self) -> std::sync::RwLockReadGuard<Storage> {
         let storage = self.0.storage.read().unwrap(); //Need to do better error handling here, instead of unwrap
         return storage;
     }
 
     pub(crate) fn get_storage_clone(&self) -> Arc<RwLock<Storage>> {
-        self.0.storage.clone()
+        self.storage.clone()
     }
 
     pub fn dims(&self) -> Vec<usize> {
@@ -122,80 +198,33 @@ impl Tensor {
     }
 
     pub fn device(&self) -> Device {
-        self.0.device
+        self.device
     }
 
     pub fn shape(&self) -> Shape {
-        self.0.layout.get_shape()
+        self.layout.shape()
     }
 
     pub fn stride(&self) -> Stride {
-        self.0.layout.get_stride()
-    }
-
-    pub(crate) fn offset(&self) -> usize {
-        self.0.layout.offset
+        self.layout.stride()
     }
 
     pub(crate) fn is_layout_contiguous(&self) -> bool {
-        self.0.layout.is_contiguous()
+        self.layout.is_contiguous()
+    }
+
+    pub fn layout(&self) -> &Layout {
+        &self.layout
     }
 
     //The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.
     pub fn rank(&self) -> usize {
-        self.0.layout.get_shape().rank()
+        self.layout.shape().rank()
     }
 
     //Max number of elements in the Tensor
     pub fn elem_count(&self) -> usize {
-        self.0.layout.get_shape().elem_count()
-    }
-
-    pub fn as_string(&self, truncate: Option<bool>) -> Result<String, String> {
-        let dims = self.dims();
-        let strides = self.stride();
-
-        let storage = self.get_storage_ref();
-
-        let binding = storage.cpu_get_raw();
-        let cpu_storage_data = binding.as_ref();
-        let initial_offset = self.offset();
-
-        if !self.is_layout_contiguous() {
-            return Err(String::from("Non Contigous layout not supported"));
-        }
-        let formatted_string = match cpu_storage_data {
-            crate::cpu_backend::CpuStorage::U8(data) => {
-                utils::as_string(&data, dims, strides, truncate, initial_offset)
-            }
-            crate::cpu_backend::CpuStorage::U32(data) => {
-                utils::as_string(&data, dims, strides, truncate, initial_offset)
-            }
-            crate::cpu_backend::CpuStorage::I64(data) => {
-                utils::as_string(&data, dims, strides, truncate, initial_offset)
-            }
-            crate::cpu_backend::CpuStorage::F32(data) => {
-                utils::as_string(&data, dims, strides, truncate, initial_offset)
-            }
-            crate::cpu_backend::CpuStorage::F64(data) => {
-                utils::as_string(&data, dims, strides, truncate, initial_offset)
-            }
-        };
-        Ok(formatted_string)
-    }
-
-    // Two tensors are euqal if their shapes and elements are equal
-    pub fn equal(&self, other: &Self) -> bool {
-        if self.shape() != other.shape() {
-            return false;
-        }
-        let self_storage = &*self.get_storage_ref();
-        let other_storage = &*other.get_storage_ref();
-        let self_offset = (self.offset(), self.elem_count());
-        let other_offset = (other.offset(), other.elem_count());
-
-        //Element wise comparision
-        return self_storage.equal(other_storage, self_offset, other_offset);
+        self.layout.shape().elem_count()
     }
 }
 

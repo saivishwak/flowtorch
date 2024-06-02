@@ -2,7 +2,6 @@ use std::vec;
 
 use flowtorch_core::{DType, Device, Shape, Tensor};
 
-// TODO - Need to add to_vec method to be able to test the output
 fn zeros(device: &Device, dtype: DType) -> Result<Tensor, ()> {
     let s: &[usize] = &[5, 2];
     let shape: Shape = s.into();
@@ -13,7 +12,6 @@ fn zeros(device: &Device, dtype: DType) -> Result<Tensor, ()> {
     Ok(tensor)
 }
 
-// TODO - Need to add to_vec method to be able to test the output
 fn ones(device: &Device, dtype: DType) -> Result<Tensor, ()> {
     let tensor = Tensor::ones((3, 3, 2), dtype, device).unwrap();
     let shape = tensor.dims();
@@ -23,12 +21,14 @@ fn ones(device: &Device, dtype: DType) -> Result<Tensor, ()> {
     Ok(tensor)
 }
 
+// TODO - Need to add to_vec method to be able to test the output
 #[test]
 fn test_zeros() {
     let device = Device::Cpu;
     let _ = zeros(&device, DType::F32);
 }
 
+// TODO - Need to add to_vec method to be able to test the output
 #[test]
 fn test_ones() {
     let device = Device::Cpu;
@@ -246,7 +246,6 @@ fn dtype() -> Result<(), ()> {
 }
 
 #[test]
-// TODO - Need to add to_vec method to be able to test the output
 fn format() {
     let device = &Device::Cpu;
     assert_eq!(
@@ -322,6 +321,54 @@ fn format() {
         .as_string(Some(false))
         .unwrap()
         .as_str()
+    );
+
+    assert_eq!(
+        "[0, 0, 0]",
+        Tensor::zeros(3, DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
+    );
+
+    assert_eq!(
+        "[1, 1, 1]",
+        Tensor::ones(3, DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
+    );
+
+    assert_eq!(
+        "[[1], [1], [1]]",
+        Tensor::ones((3, 1), DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
+    );
+
+    assert_eq!(
+        "[[0], [0], [0]]",
+        Tensor::zeros((3, 1), DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
+    );
+
+    assert_eq!(
+        "[[[0, 0]], [[0, 0]], [[0, 0]]]",
+        Tensor::zeros((3, 1, 2), DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
+    );
+
+    assert_eq!(
+        "[[[1, 1]], [[1, 1]], [[1, 1]]]",
+        Tensor::ones((3, 1, 2), DType::F64, device)
+            .unwrap()
+            .as_string(None)
+            .unwrap()
     );
 }
 

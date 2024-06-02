@@ -3,36 +3,42 @@ use std::sync::Arc;
 
 impl Tensor {
     pub fn i<T: Into<TensorIdx>>(&self, idx: T) -> Result<Tensor, Error> {
-        if !self.0.layout.is_contiguous() {
-            return Err(Error::Unknown); //Not supported as of now
+        if !self.is_layout_contiguous() {
+            return Err(Error::Index(String::from(
+                "Non Contiguous layout not supported yet!",
+            ))); //Not supported as of now
         }
+        //Initial offfset
+        let mut offset = self.offset();
         let idx: TensorIdx = idx.into(); //Safe to call into directly
         let idx_vec = idx.0;
         let dims = self.dims();
         let strides = self.stride();
 
         if idx_vec.len() == 0 {
-            return Err(Error::Unknown);
+            return Err(Error::Index(String::from("Index value cannot be empty.")));
         }
         if idx_vec.len() > dims.len() {
-            return Err(Error::Unknown);
+            return Err(Error::Index(String::from(
+                "Dimentionality mismatch of index and Tensor Dim.",
+            )));
         }
         //Check overflow in each dim
         for i in 0..idx_vec.len() {
             if idx_vec[i] >= dims[i] {
-                return Err(Error::Unknown);
+                return Err(Error::Index(format!("Overflow occured at Dimension {}", i)));
             }
         }
 
-        let storage = self.0.storage.clone();
+        let storage = self.get_storage_clone();
+
         let shape = dims
             .iter()
             .skip(idx_vec.len())
             .map(|&v| v)
             .collect::<Vec<usize>>();
 
-        //Initial offset
-        let mut offset = self.0.layout.offset;
+        //Calculate offset
         for i in 0..idx_vec.len() {
             offset += strides[i] * idx_vec[i];
         }
@@ -55,6 +61,7 @@ impl From<Vec<usize>> for TensorIdx {
     }
 }
 
+//TODO Add more dimension support
 impl From<(usize,)> for TensorIdx {
     fn from(value: (usize,)) -> Self {
         let dim1 = value.0;

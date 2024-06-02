@@ -13,13 +13,15 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add Arc and Rw::Lock for Storage in Tensor
 - [x] Implement Display for Tensor to print the matrix
 - [x] Implement Indexing which return a tensor
-- [ ] Study Torch7 Library and how Storage, Tensor is implemented
-- [ ] Get Method for accesssing elements
-- [ ] Add to_dtype method to convert the data type
-- [ ] Add Tensor.to_vec methods, to get different dim vectors
+- [x] Refactor indexing
+- [ ] Add tuple with any number of elements for indexing
 - [ ] Add Basic Ops to Tensor along with Dotproduct
+- [ ] Add to_dtype method to convert the data type
+- [ ] Get Method for accesssing elements
+- [ ] Study Torch7 Library and how Storage, Tensor is implemented
 - [ ] Add CUDA Device support
 - [ ] Add to_device method support for converting the device of Tensor
+- [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Support Fotran Memory layout (colum Major)
 
 

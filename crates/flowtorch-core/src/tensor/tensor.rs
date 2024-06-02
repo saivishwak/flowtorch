@@ -82,12 +82,12 @@ impl Tensor {
         }
         //Right now Reshape is only supported for contiguous Tensor.
         // The Arc<RwLock<Storage>> ensures that the clone does not create new data in heap
-        if self.0.layout.is_contiguous() {
-            let storage = self.0.storage.clone();
+        if self.is_layout_contiguous() {
+            let storage = self.get_storage_clone();
             let device = self.get_storage_ref().device();
             let tensor_ = Tensor_ {
                 storage,
-                layout: Layout::contiguous_with_offset(shape, self.0.layout.offset),
+                layout: Layout::contiguous_with_offset(shape, self.offset()),
                 device,
             };
             return Ok(Tensor(Arc::new(tensor_)));
@@ -105,8 +105,12 @@ impl Tensor {
     }
 
     pub fn get_storage_ref(&self) -> std::sync::RwLockReadGuard<Storage> {
-        let storage = self.0.storage.read().unwrap();
+        let storage = self.0.storage.read().unwrap(); //Need to do better error handling here, instead of unwrap
         return storage;
+    }
+
+    pub(crate) fn get_storage_clone(&self) -> Arc<RwLock<Storage>> {
+        self.0.storage.clone()
     }
 
     pub fn dims(&self) -> Vec<usize> {
@@ -129,6 +133,14 @@ impl Tensor {
         self.0.layout.get_stride()
     }
 
+    pub(crate) fn offset(&self) -> usize {
+        self.0.layout.offset
+    }
+
+    pub(crate) fn is_layout_contiguous(&self) -> bool {
+        self.0.layout.is_contiguous()
+    }
+
     //The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.
     pub fn rank(&self) -> usize {
         self.0.layout.get_shape().rank()
@@ -146,13 +158,13 @@ impl Tensor {
         let storage = self.get_storage_ref();
 
         let binding = storage.cpu_get_raw();
-        let storage_data = binding.as_ref();
-        let initial_offset = self.0.layout.offset;
+        let cpu_storage_data = binding.as_ref();
+        let initial_offset = self.offset();
 
-        if !self.0.layout.is_contiguous() {
+        if !self.is_layout_contiguous() {
             return Err(String::from("Non Contigous layout not supported"));
         }
-        let formatted_string = match storage_data {
+        let formatted_string = match cpu_storage_data {
             crate::cpu_backend::CpuStorage::U8(data) => {
                 utils::as_string(&data, dims, strides, truncate, initial_offset)
             }
@@ -171,20 +183,24 @@ impl Tensor {
         };
         Ok(formatted_string)
     }
-}
 
-// Two tensors are euqal if their shapes are equal
-impl PartialEq for Tensor {
-    fn eq(&self, other: &Self) -> bool {
+    // Two tensors are euqal if their shapes and elements are equal
+    pub fn equal(&self, other: &Self) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
         let self_storage = &*self.get_storage_ref();
         let other_storage = &*other.get_storage_ref();
-        let self_offset = (self.0.layout.offset, self.elem_count());
-        let other_offset = (other.0.layout.offset, other.elem_count());
+        let self_offset = (self.offset(), self.elem_count());
+        let other_offset = (other.offset(), other.elem_count());
 
         //Element wise comparision
         return self_storage.equal(other_storage, self_offset, other_offset);
+    }
+}
+
+impl PartialEq for Tensor {
+    fn eq(&self, other: &Self) -> bool {
+        self.equal(other)
     }
 }

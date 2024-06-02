@@ -25,6 +25,8 @@ pub enum Error {
         #[from]
         source: NDArrayError,
     },
+    #[error("Index error")]
+    Index(String),
     #[error("unknown error")]
     Unknown,
 }

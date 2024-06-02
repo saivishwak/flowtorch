@@ -125,7 +125,7 @@ impl CpuStorage {
         return Box::new(self);
     }
 
-    pub fn equal(
+    pub(super) fn equal(
         &self,
         other: &Self,
         self_offset: (usize, usize),

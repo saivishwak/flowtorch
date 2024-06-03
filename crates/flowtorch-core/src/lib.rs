@@ -1,3 +1,30 @@
+//! Safe and Performant ML Library for Rust
+//!
+//! ```rust
+//! use flowtorch_core::{DType, Device, Tensor, Error};
+//! # fn main() -> Result<(), Error>{
+//!
+//! let a = Tensor::new(&[0.0f32, 1.0, 2.0], &Device::Cpu)?;
+//! let b = Tensor::new(&[1.0f32, 2.0, 3.0], &Device::Cpu)?;
+//!
+//! let c = (a + b)?;
+//! # Ok(())}
+//! ```
+//!
+//! ## Features
+//!
+//! - Very Similar to PyTorch
+//! - Awesome Python support for research workloads
+//! - CPU and Cuda support coming soon!
+//!
+//! ## FAQ
+//!
+//! - Why FlowTorch?
+//!
+//! FlowTorch aims to be safe and performant ML library with small codebase for faster pace in development and to eventually to be used
+//! in embedded devices and production workloads.
+//!
+
 mod cpu_backend;
 mod device;
 mod display;

@@ -20,6 +20,22 @@ pub struct Tensor_ {
     op: Option<Op>,
 }
 
+/// The Tensor struct
+///
+/// Tensor is N Dimensional Array with same element type
+///
+/// # Examples
+///
+/// ```rust
+/// use flowtorch_core::{DType, Device, Error, Tensor};
+///
+/// fn main() -> Result<(), Error> {
+///     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &Device::Cpu)?;
+///     let y = Tensor::new(vec![1.0f64, 2.0, 3.0], &Device::Cpu)?;
+///     let z = x + y;
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct Tensor(Arc<Tensor_>);
 
@@ -34,6 +50,26 @@ impl std::ops::Deref for Tensor {
 impl Tensor {
     /* Creation Ops */
 
+    /// Creates a new Tensor from given NDArray
+    ///
+    /// The NDArray is a custom n-dimensional array which is converted from Vec and Slices. The New Tensor
+    /// will store data in the specified device.
+    ///
+    /// # Errors
+    /// If provided device storage allocation fails, Error is returned.
+    /// If the Shape cannot be infered from the Array then Error is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &Device::Cpu)?;
+    ///     let y = Tensor::new(vec![1.0f64, 2.0, 3.0], &Device::Cpu)?;
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn new<D>(array: D, device: &Device) -> Result<Self, Error>
     where
         D: NdArray,
@@ -43,18 +79,67 @@ impl Tensor {
         return Self::from_storage(storage, shape, None);
     }
 
+    /// Creates a new Tensor with all zeros with specified Shape and Dtype
+    ///
+    /// # Errors
+    /// If provided device storage allocation fails, Error is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::zeros((2, 2), DType::F32, &Device::Cpu)?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn zeros<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.zeros(&shape, dtype)?;
         return Self::from_storage(storage, shape, None);
     }
 
+    /// Creates a new Tensor with all ones with specified Shape and Dtype
+    ///
+    /// # Errors
+    /// If provided device storage allocation fails, Error is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::ones((2, 2), DType::F32, &Device::Cpu)?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn ones<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.ones(&shape, dtype)?;
         return Self::from_storage(storage, shape, None);
     }
 
+    /// Creates a new Tensor from a Vec
+    ///
+    /// # Errors
+    /// If the shape does not match with the Vec len then an Error is returned.
+    /// If provided device storage allocation fails, Error is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::from_vec(vec![1, 2], (2, 1), &Device::Cpu)?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn from_vec<S: Into<Shape>, D: WithDType>(
         data: Vec<D>,
         shape: S,
@@ -89,6 +174,25 @@ impl Tensor {
 
     /* Indexing, Slicing Ops */
 
+    /// Returns a tensor with the same data and number of elements as input, but with the specified shape.
+    ///
+    /// This does not clone the underlying data but referes it.
+    ///
+    /// # Errors
+    /// If the shape does not match with existing shape, i.e the number of elements should be same.
+    /// If the Memory layout is non-contiguous (Fotran). Not supported as of today.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::from_vec(vec![1, 2], (2, 1), &Device::Cpu)?.reshape((1, 2))?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn reshape<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, Error> {
         let shape: Shape = shape.into();
         if shape.elem_count() != self.elem_count() {
@@ -115,16 +219,28 @@ impl Tensor {
         ))));
     }
 
-    /*
-    view is same as reshape
-     */
+    /// View is same as Reshape
     pub fn view<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, Error> {
         return self.reshape(shape);
     }
 
-    /**
-     * Implementation similar to https://pytorch.org/docs/stable/generated/torch.narrow.html
-     */
+    /// Returns a new tensor that is a narrowed version of input tensor. \
+    /// The dimension dim is input from start to start + length. The returned tensor and input tensor share the same underlying storage.
+    /// Implementation similar to https://pytorch.org/docs/stable/generated/torch.narrow.html
+    ///
+    /// This does not clone the underlying data but referes it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[[1], [2]], &Device::Cpu)?.narrow(1, 0, 1)?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {
         let shape = self.shape();
         let dims = shape.dims();
@@ -155,6 +271,21 @@ impl Tensor {
         }
     }
 
+    /// Returns a tensor with all specified dimensions of input of size 1 removed.
+    ///
+    /// This does not clone the underlying data but referes it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[[1], [2]], &Device::Cpu)?.squeeze(1)?;
+    ///     println!("{}", x);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn squeeze(&self, dim: usize) -> Result<Self, Error> {
         let dims = self.dims();
         if dims[dim] == 1 {
@@ -174,7 +305,7 @@ impl Tensor {
         }
     }
 
-    //This returns a new storage, does not point to same storage like self
+    /// TODO - Need to implement
     pub fn index_select(&self, dim: usize, indexes: &Self) -> Result<Self, Error> {
         if indexes.rank() != 1 {
             return Err(Error::Unknown);
@@ -192,7 +323,21 @@ impl Tensor {
 
     /* Binary Ops */
 
-    // Two tensors are euqal if their shapes and elements are equal
+    /// Return true if tensors are equal
+    /// Two Tensors are equal if their shapes and elements are equal
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     let y = Tensor::new(&[[1], [2]], &Device::Cpu)?.squeeze(1)?;
+    ///     println!("{}", x.equal(&y));
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn equal(&self, other: &Self) -> bool {
         if self.shape() != other.shape() {
             return false;
@@ -236,44 +381,136 @@ impl Tensor {
 
     /* Access Methods */
 
+    /// Returns a ReadLock Sotrage of the Tensor
     pub fn storage(&self) -> std::sync::RwLockReadGuard<'_, Storage> {
         self.storage.read().unwrap()
     }
 
+    /// Returns the Dims (Shape as Vec) of the Tensor
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{:?}", x.dims());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn dims(&self) -> Vec<usize> {
         self.shape().dims().to_vec()
     }
 
+    /// Returns the Dtype of the Tensor elements
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{}", x.dtype());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn dtype(&self) -> DType {
         self.storage().dtype()
     }
 
+    /// Returns the Device of the Tensor
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{}", x.device());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn device(&self) -> Device {
         self.device
     }
 
+    /// Returns Shape Struct of the Tensor
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{:?}", x.shape());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn shape(&self) -> Shape {
         self.layout.shape()
     }
 
+    /// Returns Stride of the Tensor
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{:?}", x.stride());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn stride(&self) -> Stride {
         self.layout.stride()
     }
 
+    /// Return true if the Tensor memeory layout is Contiguous of Row Major (aka C Type)
     pub(crate) fn is_layout_contiguous(&self) -> bool {
         self.layout.is_contiguous()
     }
 
+    /// Returns the Layout Reference of the Tensor
     pub fn layout(&self) -> &Layout {
         &self.layout
     }
 
-    //The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.
+    /// The rank of a tensor is the number of dimensions or axes it has. In other words, it is the length of the shape of the tensor.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{}", x.rank());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn rank(&self) -> usize {
         self.layout.shape().rank()
     }
 
-    //Max number of elements in the Tensor
+    /// Max number of elements in the Tensor
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    ///
+    /// fn main() -> Result<(), Error> {
+    ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
+    ///     println!("{}", x.elem_count());
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn elem_count(&self) -> usize {
         self.layout.shape().elem_count()
     }

@@ -10,6 +10,8 @@ pub enum DType {
     U32,
     // Signed 64 bits integer.
     I64,
+    // Signed 32 bits integer.
+    I32,
     // Floating-point using single precision (32 bits).
     F32,
     // Floating-point using double precision (64 bits).
@@ -19,11 +21,12 @@ pub enum DType {
 impl Display for DType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DType::U8 => write!(f, "u8"),
-            DType::U32 => write!(f, "u32"),
-            DType::I64 => write!(f, "i64"),
-            DType::F32 => write!(f, "f32"),
-            DType::F64 => write!(f, "f64"),
+            Self::U8 => write!(f, "u8"),
+            Self::U32 => write!(f, "u32"),
+            Self::I64 => write!(f, "i64"),
+            Self::I32 => write!(f, "i32"),
+            Self::F32 => write!(f, "f32"),
+            Self::F64 => write!(f, "f64"),
         }
     }
 }
@@ -50,5 +53,6 @@ macro_rules! with_dtype {
 with_dtype!(u8, U8);
 with_dtype!(u32, U32);
 with_dtype!(i64, I64);
+with_dtype!(i32, I32);
 with_dtype!(f32, F32);
 with_dtype!(f64, F64);

@@ -17,6 +17,7 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add tuple with range indexing
 - [x] Fix Pretty Printing of Tensor
 - [x] Fix Display with PrintOptions
+- [x] Add I32 data type
 - [ ] Add macros and optimze code for ops
 - [ ] Add Basic Ops to Tensor along with Dotproduct
 - [ ] Add to_dtype method to convert the data type

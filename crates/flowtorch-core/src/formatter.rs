@@ -48,6 +48,9 @@ impl Formatter {
             crate::cpu_backend::CpuStorage::I64(data) => {
                 self.fmt_tensor_as_string(data, dims, &stride, start_offset)
             }
+            crate::cpu_backend::CpuStorage::I32(data) => {
+                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+            }
             crate::cpu_backend::CpuStorage::F32(data) => {
                 self.fmt_tensor_as_string(data, dims, &stride, start_offset)
             }

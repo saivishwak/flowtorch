@@ -20,6 +20,12 @@ fn add() {
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], &device).unwrap();
     let z = (x + y).unwrap();
     assert_eq!(Tensor::new(&[3.0f64, 4.0, 6.0], &device).unwrap(), z);
+
+    //Int type
+    let x = Tensor::new(&[1, 2, 3], &device).unwrap();
+    let y = Tensor::new(&[2, 2, 3], &device).unwrap();
+    let z = (x + y).unwrap();
+    assert_eq!(Tensor::new(&[3, 4, 6], &device).unwrap(), z);
 }
 
 #[test]

@@ -9,120 +9,13 @@ pub use error::*;
 pub enum CpuStorage {
     U8(Vec<u8>),
     U32(Vec<u32>),
+    I32(Vec<i32>),
     I64(Vec<i64>),
     F32(Vec<f32>),
     F64(Vec<f64>),
 }
 
 impl CpuStorage {
-    //All the DataTypes should be same for a sequence of storages.
-    pub fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, CpuStorageError> {
-        let storage0 = &storages[0];
-        let s = match storage0 {
-            Self::U8(_) => {
-                let storages = storages
-                    .iter()
-                    .map(|s| match s {
-                        Self::U8(s) => Ok(s.as_slice()),
-                        _ => {
-                            return Err(CpuStorageError::new(
-                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                            ))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, CpuStorageError>>();
-                match storages {
-                    Ok(storages_unwrapped) => {
-                        let storages_concatenated = storages_unwrapped.concat();
-                        Self::U8(storages_concatenated)
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
-            Self::U32(_) => {
-                let storages = storages
-                    .iter()
-                    .map(|s| match s {
-                        Self::U32(s) => Ok(s.as_slice()),
-                        _ => {
-                            return Err(CpuStorageError::new(
-                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                            ))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, CpuStorageError>>();
-                match storages {
-                    Ok(storages_unwrapped) => {
-                        let storages_concatenated = storages_unwrapped.concat();
-                        Self::U32(storages_concatenated)
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
-            Self::I64(_) => {
-                let storages = storages
-                    .iter()
-                    .map(|s| match s {
-                        Self::I64(s) => Ok(s.as_slice()),
-                        _ => {
-                            return Err(CpuStorageError::new(
-                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                            ))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, CpuStorageError>>();
-                match storages {
-                    Ok(storages_unwrapped) => {
-                        let storages_concatenated = storages_unwrapped.concat();
-                        Self::I64(storages_concatenated)
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
-            Self::F32(_) => {
-                let storages = storages
-                    .iter()
-                    .map(|s| match s {
-                        Self::F32(s) => Ok(s.as_slice()),
-                        _ => {
-                            return Err(CpuStorageError::new(
-                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                            ))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, CpuStorageError>>();
-                match storages {
-                    Ok(storages_unwrapped) => {
-                        let storages_concatenated = storages_unwrapped.concat();
-                        Self::F32(storages_concatenated)
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
-            Self::F64(_) => {
-                let storages = storages
-                    .iter()
-                    .map(|s| match s {
-                        Self::F64(s) => Ok(s.as_slice()),
-                        _ => {
-                            return Err(CpuStorageError::new(
-                                CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                            ))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, CpuStorageError>>();
-                match storages {
-                    Ok(storages_unwrapped) => {
-                        let storages_concatenated = storages_unwrapped.concat();
-                        Self::F64(storages_concatenated)
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
-        };
-        Ok(s)
-    }
-
     fn get_raw(&self) -> Box<&CpuStorage> {
         return Box::new(self);
     }
@@ -141,6 +34,9 @@ impl CpuStorage {
                 compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
             (Self::I64(lhs_data), Self::I64(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
                 compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
             }
             (Self::F32(lhs_data), Self::F32(rhs_data)) => {
@@ -163,6 +59,9 @@ impl CpuStorage {
             }
             (Self::I64(lhs_data), Self::I64(rhs_data)) => {
                 return Ok(CpuStorage::I64(add_vec(lhs_data, rhs_data)));
+            }
+            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
+                return Ok(CpuStorage::I32(add_vec(lhs_data, rhs_data)));
             }
             (Self::F32(lhs_data), Self::F32(rhs_data)) => {
                 return Ok(CpuStorage::F32(add_vec(lhs_data, rhs_data)));
@@ -187,6 +86,9 @@ impl CpuStorage {
             (Self::I64(lhs_data), Self::I64(rhs_data)) => {
                 return Ok(CpuStorage::I64(mul_vec(lhs_data, rhs_data)));
             }
+            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
+                return Ok(CpuStorage::I32(mul_vec(lhs_data, rhs_data)));
+            }
             (Self::F32(lhs_data), Self::F32(rhs_data)) => {
                 return Ok(CpuStorage::F32(mul_vec(lhs_data, rhs_data)));
             }
@@ -210,6 +112,44 @@ impl CpuStorage {
         todo!()
     }
 }
+
+macro_rules! concat_impl {
+    ($($variant:ident),*) => {
+        impl CpuStorage {
+            //All the DataTypes should be same for a sequence of storages.
+            pub(super) fn concat(storages: &[CpuStorage]) -> Result<CpuStorage, CpuStorageError> {
+                let storage0 = &storages[0];
+                match storage0 {
+                    $(
+                        Self::$variant(_) => {
+                            let storages = storages
+                                .iter()
+                                .map(|s| match s {
+                                    Self::$variant(s) => Ok(s.as_slice()),
+                                    _ => {
+                                        return Err(CpuStorageError::new(
+                                            CpuStorageErrorKind::ContiguousElementDtypeMismatch,
+                                        ))
+                                    }
+                                })
+                                .collect::<Result<Vec<_>, CpuStorageError>>();
+                            match storages {
+                                Ok(storages_unwrapped) => {
+                                    let storages_concatenated = storages_unwrapped.concat();
+                                    Ok(Self::$variant(storages_concatenated))
+                                }
+                                Err(e) => Err(e),
+                            }
+                        }
+                    )*
+                }
+            }
+        }
+    }
+}
+
+// Applying the macro to generate the `concat` implementation for the variants
+concat_impl!(U8, U32, I32, I64, F32, F64);
 
 impl BaseStorage for CpuStorage {
     fn cpu_get_raw(&self) -> Box<&CpuStorage> {
@@ -246,6 +186,7 @@ impl CpuDevice {
             DType::U8 => Ok(CpuStorage::U8(vec![0u8; num_elements])),
             DType::U32 => Ok(CpuStorage::U32(vec![0u32; num_elements])),
             DType::I64 => Ok(CpuStorage::I64(vec![0i64; num_elements])),
+            DType::I32 => Ok(CpuStorage::I32(vec![0i32; num_elements])),
         }
     }
 
@@ -258,6 +199,7 @@ impl CpuDevice {
             DType::U8 => Ok(CpuStorage::U8(vec![1u8; num_elements])),
             DType::U32 => Ok(CpuStorage::U32(vec![1u32; num_elements])),
             DType::I64 => Ok(CpuStorage::I64(vec![1i64; num_elements])),
+            DType::I32 => Ok(CpuStorage::I32(vec![1i32; num_elements])),
         }
     }
 }

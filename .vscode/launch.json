@@ -50,7 +50,7 @@
                 "args": [
                     "test",
                     "--no-run",
-                    "--test=tensor",
+                    "--test=tensor_format",
                     "--package=flowtorch-core"
                 ],
                 "filter": {

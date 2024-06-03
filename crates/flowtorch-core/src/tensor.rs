@@ -64,7 +64,7 @@ impl Tensor {
         let buffer_size = data.len();
         if buffer_size != shape.elem_count() {
             return Err(Error::TensorInit(
-                Some(D::get_dtype()),
+                Some(D::dtype()),
                 String::from("Provided shape and length of Data does not match"),
             ));
         }

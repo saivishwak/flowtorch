@@ -5,7 +5,7 @@ use std::ops::{Add, Mul};
 use crate::{layout::Layout, shape::Shape, storage::BaseStorage, DType, Error};
 pub use error::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum CpuStorage {
     U8(Vec<u8>),
     U32(Vec<u32>),

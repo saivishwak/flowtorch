@@ -4,7 +4,7 @@ pub trait BaseStorage {
     fn cpu_get_raw(&self) -> Box<&CpuStorage>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Storage {
     Cpu(CpuStorage),
 }

@@ -28,9 +28,9 @@ impl Display for DType {
     }
 }
 
-pub trait WithDType: Sized + Copy + 'static + Debug {
+pub trait WithDType: Sized + Copy + 'static + Debug + Display {
     fn to_cpu_storage(data: &[Self]) -> CpuStorage;
-    fn get_dtype() -> DType;
+    fn dtype() -> DType;
 }
 
 macro_rules! with_dtype {
@@ -40,7 +40,7 @@ macro_rules! with_dtype {
                 CpuStorage::$dtype(data.to_vec())
             }
 
-            fn get_dtype() -> DType {
+            fn dtype() -> DType {
                 DType::$dtype
             }
         }

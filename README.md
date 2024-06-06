@@ -20,8 +20,10 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add I32 data type
 - [x] Add Baisc Docs for Tensor
 - [x] Add Tests for Narrow and Squeeze,
-- [ ] Add macros and optimze code for ops
-- [ ] Add Basic Ops to Tensor along with Dotproduct
+- [x] Add macros and optimze code for ops
+- [x] Add Basic Binray Ops to Tensor
+- [ ] Add basic unary ops
+- [ ] Add Basic Back Prop
 - [ ] Add to_dtype method to convert the data type
 - [ ] Add CUDA Device support
 - [ ] Add to_device method support for converting the device of Tensor

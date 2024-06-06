@@ -47,6 +47,28 @@ impl std::ops::Deref for Tensor {
     }
 }
 
+macro_rules! binary_op {
+    ($fn_name:ident, $op_name:ident, $impl_name:ident) => {
+        pub fn $fn_name(&self, rhs: &Self) -> Result<Self, Error> {
+            let shape = self.shape().clone();
+            let storage = self.storage().binary_impl::<crate::ops::$op_name>(
+                &rhs.storage(),
+                &self.layout(),
+                &rhs.layout(),
+            )?;
+            return Self::from_storage(
+                storage,
+                shape,
+                Some(crate::ops::Op::Binary(
+                    self.clone(),
+                    rhs.clone(),
+                    crate::ops::BinaryOp::$op_name,
+                )),
+            );
+        }
+    };
+}
+
 impl Tensor {
     /* Creation Ops */
 
@@ -224,7 +246,7 @@ impl Tensor {
         return self.reshape(shape);
     }
 
-    /// Returns a new tensor that is a narrowed version of input tensor. \
+    /// Returns a new tensor that is a narrowed version of input tensor.
     /// The dimension dim is input from start to start + length. The returned tensor and input tensor share the same underlying storage.
     /// Implementation similar to https://pytorch.org/docs/stable/generated/torch.narrow.html
     ///
@@ -351,33 +373,10 @@ impl Tensor {
         return self_storage.equal(other_storage, self_offset, other_offset);
     }
 
-    pub fn add_(&self, rhs: &Self) -> Result<Self, Error> {
-        if self.shape() != rhs.shape() {
-            return Err(Error::Unknown);
-        }
-        let lhs_storage = &*self.storage();
-        let rhs_storage = &*rhs.storage();
-        let new_storage = lhs_storage.add(rhs_storage)?;
-        return Self::from_storage(
-            new_storage,
-            self.shape().clone(),
-            Some(Op::Add(self.clone(), rhs.clone())),
-        );
-    }
-
-    pub fn mul_(&self, rhs: &Self) -> Result<Self, Error> {
-        if self.shape() != rhs.shape() {
-            return Err(Error::Unknown);
-        }
-        let lhs_storage = &*self.storage();
-        let rhs_storage = &*rhs.storage();
-        let new_storage = lhs_storage.mul(rhs_storage)?;
-        return Self::from_storage(
-            new_storage,
-            self.shape().clone(),
-            Some(Op::Mul(self.clone(), rhs.clone())),
-        );
-    }
+    binary_op!(add, Add, add);
+    binary_op!(mul, Mul, mul);
+    binary_op!(sub, Sub, sub);
+    binary_op!(div, Div, div);
 
     /* Access Methods */
 
@@ -521,3 +520,20 @@ impl PartialEq for Tensor {
         self.equal(other)
     }
 }
+
+/// Macro for std binary ops
+macro_rules! std_binary_op {
+    ($op_name:ident, $impl_name: ident) => {
+        impl<B: std::borrow::Borrow<Tensor>> std::ops::$op_name<B> for Tensor {
+            type Output = Result<Self, Error>;
+            fn $impl_name(self, rhs: B) -> Self::Output {
+                Tensor::$impl_name(&self, rhs.borrow())
+            }
+        }
+    };
+}
+
+std_binary_op!(Add, add);
+std_binary_op!(Mul, mul);
+std_binary_op!(Sub, sub);
+std_binary_op!(Div, div);

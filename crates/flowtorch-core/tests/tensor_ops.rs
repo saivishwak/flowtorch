@@ -18,14 +18,32 @@ fn add() {
     let device = &Device::Cpu;
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], &device).unwrap();
+    let z = Tensor::add(&x, &y).unwrap();
+    assert_eq!(Tensor::new(&[3.0f64, 4.0, 6.0], &device).unwrap(), z);
+
     let z = (x + y).unwrap();
     assert_eq!(Tensor::new(&[3.0f64, 4.0, 6.0], &device).unwrap(), z);
 
     //Int type
     let x = Tensor::new(&[1, 2, 3], &device).unwrap();
     let y = Tensor::new(&[2, 2, 3], &device).unwrap();
+    let z = Tensor::add(&x, &y).unwrap();
+    assert_eq!(Tensor::new(&[3, 4, 6], &device).unwrap(), z);
+
     let z = (x + y).unwrap();
     assert_eq!(Tensor::new(&[3, 4, 6], &device).unwrap(), z);
+}
+
+#[test]
+fn sub() {
+    let device = &Device::Cpu;
+    let x = Tensor::new(&[1.0f64, 2.0, 3.0], &device).unwrap();
+    let y = Tensor::new(&[2.0f64, 2.0, 3.0], &device).unwrap();
+    let z = Tensor::sub(&y, &x).unwrap();
+    assert_eq!(Tensor::new(&[1.0f64, 0.0, 0.0], &device).unwrap(), z);
+
+    let z = (y - x).unwrap();
+    assert_eq!(Tensor::new(&[1.0f64, 0.0, 0.0], &device).unwrap(), z);
 }
 
 #[test]
@@ -33,6 +51,9 @@ fn mul() {
     let device = &Device::Cpu;
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], &device).unwrap();
+    let z = Tensor::mul(&x, &y).unwrap();
+    assert_eq!(Tensor::new(&[2.0f64, 4.0, 9.0], &device).unwrap(), z);
+
     let z = (x * y).unwrap();
     assert_eq!(Tensor::new(&[2.0f64, 4.0, 9.0], &device).unwrap(), z);
 }

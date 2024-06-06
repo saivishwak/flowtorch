@@ -1,4 +1,4 @@
-use crate::{cpu_backend::CpuStorage, layout::Layout, DType, Device, Error};
+use crate::{cpu_backend::CpuStorage, layout::Layout, ops::BinaryOpT, DType, Device, Error};
 
 pub trait BaseStorage {
     fn cpu_get_raw(&self) -> Box<&CpuStorage>;
@@ -52,6 +52,20 @@ impl Storage {
         }
     }
 
+    pub(crate) fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, Error> {
+        match (self, rhs) {
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
+                let storage = lhs.binary_impl::<B>(rhs, lhs_layout, rhs_layout)?;
+                Ok(Storage::Cpu(storage))
+            }
+        }
+    }
+
     pub(crate) fn equal(
         &self,
         other: &Self,
@@ -60,24 +74,6 @@ impl Storage {
     ) -> bool {
         match (self, other) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
-        }
-    }
-
-    pub(crate) fn add(&self, rhs: &Self) -> Result<Self, Error> {
-        match (self, rhs) {
-            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
-                let storage = lhs.add(rhs)?;
-                Ok(Storage::Cpu(storage))
-            }
-        }
-    }
-
-    pub(crate) fn mul(&self, rhs: &Self) -> Result<Self, Error> {
-        match (self, rhs) {
-            (Self::Cpu(lhs), Self::Cpu(rhs)) => {
-                let storage = lhs.mul(rhs)?;
-                Ok(Storage::Cpu(storage))
-            }
         }
     }
 }

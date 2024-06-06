@@ -1,8 +1,6 @@
 mod error;
 
-use std::ops::{Add, Mul};
-
-use crate::{layout::Layout, shape::Shape, storage::BaseStorage, DType, Error};
+use crate::{layout::Layout, ops::BinaryOpT, shape::Shape, storage::BaseStorage, DType, Error};
 pub use error::*;
 
 #[derive(Debug)]
@@ -49,51 +47,61 @@ impl CpuStorage {
         }
     }
 
-    pub(super) fn add(&self, rhs: &Self) -> Result<CpuStorage, Error> {
+    #[allow(unused_variables)]
+    pub(crate) fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, Error> {
         match (self, rhs) {
-            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
-                return Ok(CpuStorage::U8(add_vec(lhs_data, rhs_data)));
+            (Self::F32(lhs), Self::F32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::f32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::F32(data))
             }
-            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
-                return Ok(CpuStorage::U32(add_vec(lhs_data, rhs_data)));
+            (Self::F64(lhs), Self::F64(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::f64(*lhs, *rhs))
+                    .collect();
+                Ok(Self::F64(data))
             }
-            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
-                return Ok(CpuStorage::I64(add_vec(lhs_data, rhs_data)));
+            (Self::U8(lhs), Self::U8(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::u8(*lhs, *rhs))
+                    .collect();
+                Ok(Self::U8(data))
             }
-            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
-                return Ok(CpuStorage::I32(add_vec(lhs_data, rhs_data)));
+            (Self::U32(lhs), Self::U32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::u32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::U32(data))
             }
-            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
-                return Ok(CpuStorage::F32(add_vec(lhs_data, rhs_data)));
+            (Self::I32(lhs), Self::I32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::i32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::I32(data))
             }
-            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
-                return Ok(CpuStorage::F64(add_vec(lhs_data, rhs_data)));
-            }
-            _ => {
-                return Err(Error::Unknown);
-            }
-        }
-    }
-
-    pub(super) fn mul(&self, rhs: &Self) -> Result<CpuStorage, Error> {
-        match (self, rhs) {
-            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
-                return Ok(CpuStorage::U8(mul_vec(lhs_data, rhs_data)));
-            }
-            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
-                return Ok(CpuStorage::U32(mul_vec(lhs_data, rhs_data)));
-            }
-            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
-                return Ok(CpuStorage::I64(mul_vec(lhs_data, rhs_data)));
-            }
-            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
-                return Ok(CpuStorage::I32(mul_vec(lhs_data, rhs_data)));
-            }
-            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
-                return Ok(CpuStorage::F32(mul_vec(lhs_data, rhs_data)));
-            }
-            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
-                return Ok(CpuStorage::F64(mul_vec(lhs_data, rhs_data)));
+            (Self::I64(lhs), Self::I64(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::i64(*lhs, *rhs))
+                    .collect();
+                Ok(Self::I64(data))
             }
             _ => {
                 return Err(Error::Unknown);
@@ -102,12 +110,13 @@ impl CpuStorage {
     }
 
     //TODO - Implement index_select
+    #[allow(unused_variables)]
     pub(super) fn index_select(
         &self,
-        _rhs: &Self,
-        _lhs_layout: &Layout,
-        _rhs_layout: &Layout,
-        _dim: usize,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+        dim: usize,
     ) -> Result<CpuStorage, Error> {
         todo!()
     }
@@ -202,18 +211,4 @@ impl CpuDevice {
             DType::I32 => Ok(CpuStorage::I32(vec![1i32; num_elements])),
         }
     }
-}
-
-fn add_vec<T>(vec1: &Vec<T>, vec2: &Vec<T>) -> Vec<T>
-where
-    T: Add<Output = T> + Copy,
-{
-    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a + *b).collect()
-}
-
-fn mul_vec<T>(vec1: &Vec<T>, vec2: &Vec<T>) -> Vec<T>
-where
-    T: Mul<Output = T> + Copy,
-{
-    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a * *b).collect()
 }

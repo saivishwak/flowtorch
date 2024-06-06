@@ -1,7 +1,15 @@
 mod error;
+mod utils;
 
-use crate::{layout::Layout, ops::BinaryOpT, shape::Shape, storage::BaseStorage, DType, Error};
+use crate::{
+    layout::Layout,
+    ops::{BinaryOpT, UnaryOpT},
+    shape::Shape,
+    storage::BaseStorage,
+    DType, Error,
+};
 pub use error::*;
+use utils::compare_vecs;
 
 #[derive(Debug)]
 pub enum CpuStorage {
@@ -48,12 +56,7 @@ impl CpuStorage {
     }
 
     #[allow(unused_variables)]
-    pub(crate) fn binary_impl<B: BinaryOpT>(
-        &self,
-        rhs: &Self,
-        lhs_layout: &Layout,
-        rhs_layout: &Layout,
-    ) -> Result<Self, Error> {
+    pub(crate) fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
         match (self, rhs) {
             (Self::F32(lhs), Self::F32(rhs)) => {
                 let data = lhs
@@ -105,6 +108,35 @@ impl CpuStorage {
             }
             _ => {
                 return Err(Error::Unknown);
+            }
+        }
+    }
+
+    pub(crate) fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+        match self {
+            Self::F32(lhs) => {
+                let data = lhs.iter().map(|v| U::f32(*v)).collect();
+                Ok(Self::F32(data))
+            }
+            Self::F64(lhs) => {
+                let data = lhs.iter().map(|v| U::f64(*v)).collect();
+                Ok(Self::F64(data))
+            }
+            Self::U8(lhs) => {
+                let data = lhs.iter().map(|v| U::u8(*v)).collect();
+                Ok(Self::U8(data))
+            }
+            Self::U32(lhs) => {
+                let data = lhs.iter().map(|v| U::u32(*v)).collect();
+                Ok(Self::U32(data))
+            }
+            Self::I32(lhs) => {
+                let data = lhs.iter().map(|v| U::i32(*v)).collect();
+                Ok(Self::I32(data))
+            }
+            Self::I64(lhs) => {
+                let data = lhs.iter().map(|v| U::i64(*v)).collect();
+                Ok(Self::I64(data))
             }
         }
     }
@@ -164,23 +196,6 @@ impl BaseStorage for CpuStorage {
     fn cpu_get_raw(&self) -> Box<&CpuStorage> {
         self.get_raw()
     }
-}
-
-// Helper function to compare vectors of any type
-fn compare_vecs<T: PartialEq>(
-    vec1: &Vec<T>,
-    vec2: &Vec<T>,
-    vec1_offset: (usize, usize),
-    vec2_offset: (usize, usize),
-) -> bool {
-    let vec1_start = vec1_offset.0;
-    let vec1_end = vec1_start + vec1_offset.1;
-    let vec2_start = vec2_offset.0;
-    let vec2_end = vec2_start + vec2_offset.1;
-    if vec1_end - vec1_start != vec2_end - vec2_start {
-        return false;
-    }
-    &vec1[vec1_start..vec1_end] == &vec2[vec2_start..vec2_end]
 }
 
 pub struct CpuDevice;

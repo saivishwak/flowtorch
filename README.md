@@ -22,7 +22,7 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add Tests for Narrow and Squeeze,
 - [x] Add macros and optimze code for ops
 - [x] Add Basic Binray Ops to Tensor
-- [ ] Add basic unary ops
+- [x] Add basic unary ops
 - [ ] Add Basic Back Prop
 - [ ] Add to_dtype method to convert the data type
 - [ ] Add CUDA Device support

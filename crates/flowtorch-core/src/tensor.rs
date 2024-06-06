@@ -11,7 +11,7 @@ use crate::{
     DType, Device, Error, ShapeError,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Tensor_ {
     storage: Arc<RwLock<Storage>>, //Arc ensures that when clone is performed the data is not replicated
     layout: Layout,
@@ -51,11 +51,9 @@ macro_rules! binary_op {
     ($fn_name:ident, $op_name:ident, $impl_name:ident) => {
         pub fn $fn_name(&self, rhs: &Self) -> Result<Self, Error> {
             let shape = self.shape().clone();
-            let storage = self.storage().binary_impl::<crate::ops::$op_name>(
-                &rhs.storage(),
-                &self.layout(),
-                &rhs.layout(),
-            )?;
+            let storage = self
+                .storage()
+                .binary_impl::<crate::ops::$op_name>(&rhs.storage())?;
             return Self::from_storage(
                 storage,
                 shape,
@@ -63,6 +61,23 @@ macro_rules! binary_op {
                     self.clone(),
                     rhs.clone(),
                     crate::ops::BinaryOp::$op_name,
+                )),
+            );
+        }
+    };
+}
+
+macro_rules! unary_op {
+    ($fn_name:ident, $op_name:ident, $impl_name:ident) => {
+        pub fn $fn_name(&self) -> Result<Self, Error> {
+            let shape = self.shape().clone();
+            let storage = self.storage().unary_impl::<crate::ops::$op_name>()?;
+            return Self::from_storage(
+                storage,
+                shape,
+                Some(crate::ops::Op::Unary(
+                    self.clone(),
+                    crate::ops::UnaryOp::$op_name,
                 )),
             );
         }
@@ -377,6 +392,20 @@ impl Tensor {
     binary_op!(mul, Mul, mul);
     binary_op!(sub, Sub, sub);
     binary_op!(div, Div, div);
+    binary_op!(max, Maximum, max);
+    binary_op!(min, Minimum, min);
+
+    unary_op!(neg, Neg, neg);
+    unary_op!(sqr, Sqr, sqr);
+    unary_op!(sqrt, Sqrt, sqrt);
+    unary_op!(abs, Abs, abs);
+    unary_op!(sin, Sin, sin);
+    unary_op!(cos, Cos, cos);
+    unary_op!(tan, Tan, tan);
+    unary_op!(exp, Exp, exp);
+    unary_op!(log, Log, log);
+    unary_op!(ceil, Ceil, ceil);
+    unary_op!(floor, Floor, floor);
 
     /* Access Methods */
 

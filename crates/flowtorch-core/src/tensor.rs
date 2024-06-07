@@ -462,7 +462,7 @@ impl Tensor {
     /// }
     /// ```
     pub fn device(&self) -> Device {
-        self.device
+        self.device.clone()
     }
 
     /// Returns Shape Struct of the Tensor

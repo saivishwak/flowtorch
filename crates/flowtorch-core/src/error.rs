@@ -104,15 +104,21 @@ impl Display for StorageError {
 pub enum DeviceErrorKind {
     ZerosFail,
     OnesFail,
+    AllocFail,
+    InitFail,
     FromArrayFailure,
+    CopyFail,
 }
 
 impl DeviceErrorKind {
     pub fn as_string(&self) -> String {
         match self {
             Self::ZerosFail => format!("Zeros initialization failed!"),
-            Self::FromArrayFailure => format!("From Array Failed"),
+            Self::FromArrayFailure => format!("From Array Failed!"),
             Self::OnesFail => format!("Ones initialization failed!"),
+            Self::AllocFail => format!("Memory allocation failed!"),
+            Self::InitFail => format!("Device Initialization failed!"),
+            Self::CopyFail => format!("Copy of data failed!"),
         }
     }
 }

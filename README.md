@@ -23,9 +23,11 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add macros and optimze code for ops
 - [x] Add Basic Binray Ops to Tensor
 - [x] Add basic unary ops
-- [ ] Add Basic Back Prop
+- [x] Add Basic CUDA Device support
+- [ ] Add CUDA Ops
 - [ ] Add to_dtype method to convert the data type
-- [ ] Add CUDA Device support
+- [ ] Refactor Error::Unknown
+- [ ] Add Basic Back Prop
 - [ ] Add to_device method support for converting the device of Tensor
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Fix select_index method
@@ -41,3 +43,12 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [ ] Inference BERT/LLM's
 - [ ] Add basic autograd functionality
 - [ ] Train and Test a simple MNIST example
+
+
+
+##### Setup
+
+Running Tests for CUDA
+```
+cargo test --features "cuda" -- --nocapture 
+```

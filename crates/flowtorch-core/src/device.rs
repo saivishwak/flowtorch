@@ -1,24 +1,44 @@
 use std::fmt::Display;
 
+use crate::backend::BackendDevice;
 use crate::ndarray::NdArray;
-use crate::DeviceError;
 use crate::{cpu_backend::CpuDevice, dtype::WithDType, shape::Shape, storage::Storage, DType};
+use crate::{DeviceError, Error};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum DeviceT {
+    Cpu,
+    Cuda(usize),
+}
+
+#[derive(Debug, Clone)]
 pub enum Device {
     Cpu,
+    Cuda(crate::cuda::CudaDevice),
 }
 
 impl Device {
+    pub fn new(device: DeviceT) -> Result<Self, Error> {
+        match device {
+            DeviceT::Cpu => Ok(Self::Cpu),
+            DeviceT::Cuda(ordinal) => {
+                let dev = crate::cuda::CudaDevice::new(ordinal);
+                match dev {
+                    Ok(device) => Ok(Self::Cuda(device)),
+                    Err(_e) => Err(Error::Unknown),
+                }
+            }
+        }
+    }
+
     pub fn zeros(&self, shape: &Shape, dtype: DType) -> Result<Storage, DeviceError> {
         match self {
             Device::Cpu => {
-                let storage = CpuDevice::zeros(shape, dtype);
-                if let Ok(s) = storage {
-                    return Ok(Storage::Cpu(s));
-                } else {
-                    return Err(DeviceError::new(crate::DeviceErrorKind::ZerosFail));
-                }
+                let storage = CpuDevice.zeros_impl(shape, dtype)?;
+                Ok(Storage::Cpu(storage))
+            }
+            Device::Cuda(dev) => {
+                let storage = dev.zeros_impl(shape, dtype)?;
+                Ok(Storage::Cuda(storage))
             }
         }
     }
@@ -26,12 +46,12 @@ impl Device {
     pub fn ones(&self, shape: &Shape, dtype: DType) -> Result<Storage, DeviceError> {
         match self {
             Device::Cpu => {
-                let storage = CpuDevice::ones(shape, dtype);
-                if let Ok(s) = storage {
-                    return Ok(Storage::Cpu(s));
-                } else {
-                    return Err(DeviceError::new(crate::DeviceErrorKind::OnesFail));
-                }
+                let storage = CpuDevice.ones_impl(shape, dtype)?;
+                Ok(Storage::Cpu(storage))
+            }
+            Device::Cuda(dev) => {
+                let storage = dev.ones_impl(shape, dtype)?;
+                Ok(Storage::Cuda(storage))
             }
         }
     }
@@ -41,6 +61,11 @@ impl Device {
             Device::Cpu => {
                 let storage = S::to_cpu_storage(&data);
                 return Ok(Storage::Cpu(storage));
+            }
+            Device::Cuda(device) => {
+                let cpu_storage = S::to_cpu_storage(&data);
+                let storage = device.storage_from_cpu_storage(&cpu_storage)?;
+                Ok(Storage::Cuda(storage))
             }
         }
     }
@@ -56,6 +81,18 @@ impl Device {
                     }
                 }
             }
+            Device::Cuda(device) => {
+                let storage = array.to_cpu_storage();
+                match storage {
+                    Ok(s) => {
+                        let cuda_storage = device.storage_from_cpu_storage(&s)?;
+                        return Ok(Storage::Cuda(cuda_storage));
+                    }
+                    Err(_) => {
+                        return Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure));
+                    }
+                }
+            }
         }
     }
 }
@@ -63,7 +100,8 @@ impl Device {
 impl Display for Device {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Cpu => write!(f, "cpu"),
+            Self::Cpu => write!(f, "Cpu"),
+            Self::Cuda(cuda_device) => write!(f, "{}", cuda_device.as_str()),
         }
     }
 }

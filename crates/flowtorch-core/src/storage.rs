@@ -1,43 +1,39 @@
 use crate::{
+    backend::BackendStorage,
     cpu_backend::CpuStorage,
     layout::Layout,
     ops::{BinaryOpT, UnaryOpT},
     DType, Device, Error,
 };
 
-pub trait BaseStorage {
-    fn cpu_get_raw(&self) -> Box<&CpuStorage>;
-}
-
 #[derive(Debug)]
 pub enum Storage {
     Cpu(CpuStorage),
+    Cuda(crate::cuda::CudaStorage),
 }
 
 impl Storage {
     pub fn device(&self) -> Device {
         match self {
             Self::Cpu(_) => Device::Cpu,
+            Self::Cuda(storage) => Device::Cuda(storage.device().clone()),
         }
     }
 
     pub fn dtype(&self) -> DType {
         match self {
-            Self::Cpu(storage) => match storage {
-                CpuStorage::U8(_) => DType::U8,
-                CpuStorage::U32(_) => DType::U32,
-                CpuStorage::I32(_) => DType::I32,
-                CpuStorage::I64(_) => DType::I64,
-                CpuStorage::F32(_) => DType::F32,
-                CpuStorage::F64(_) => DType::F64,
-            },
+            Self::Cpu(storage) => storage.dtype(),
+            Self::Cuda(storage) => return storage.dtype(),
         }
     }
 
-    pub fn cpu_get_raw(&self) -> Box<&CpuStorage> {
+    pub fn get_cpu_storage(&self) -> CpuStorage {
         match self {
             Self::Cpu(storage) => {
-                return storage.cpu_get_raw();
+                return storage.get_cpu_storage();
+            }
+            Self::Cuda(storage) => {
+                return storage.get_cpu_storage();
             }
         }
     }
@@ -54,6 +50,8 @@ impl Storage {
                 let storage = lhs.index_select(rhs, lhs_layout, rhs_layout, dim)?;
                 Ok(Storage::Cpu(storage))
             }
+            (Self::Cuda(_), Self::Cuda(_)) => todo!(),
+            _ => Err(Error::Unknown),
         }
     }
 
@@ -63,6 +61,9 @@ impl Storage {
                 let storage = lhs.binary_impl::<B>(rhs)?;
                 Ok(Storage::Cpu(storage))
             }
+            //TODO
+            (Storage::Cuda(_), Storage::Cuda(_)) => todo!(),
+            _ => todo!(),
         }
     }
 
@@ -72,6 +73,8 @@ impl Storage {
                 let storage = lhs.unary_impl::<U>()?;
                 Ok(Storage::Cpu(storage))
             }
+            //TODO
+            Storage::Cuda(_) => todo!(),
         }
     }
 
@@ -83,6 +86,9 @@ impl Storage {
     ) -> bool {
         match (self, other) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
+            //TODO
+            (Storage::Cuda(_), Storage::Cuda(_)) => todo!(),
+            _ => todo!(),
         }
     }
 }

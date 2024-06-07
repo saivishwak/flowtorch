@@ -38,11 +38,25 @@ mod ops;
 mod shape;
 mod storage;
 mod tensor;
-
-pub use device::Device;
+pub use device::{Device, DeviceT};
 pub use dtype::DType;
 pub use error::*;
 pub use formatter::*;
 pub use indexer::*;
 pub use shape::Shape;
 pub use tensor::*;
+mod backend;
+
+#[cfg(feature = "cuda")]
+pub mod cuda_backend;
+
+#[cfg(feature = "cuda")]
+pub use cuda_backend as cuda;
+
+#[cfg(not(feature = "cuda"))]
+pub mod cuda_failover;
+
+#[cfg(not(feature = "cuda"))]
+pub use cuda_failover as cuda;
+
+pub use cuda::CudaDevice;

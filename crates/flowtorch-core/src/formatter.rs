@@ -28,7 +28,7 @@ impl Formatter {
 
     pub fn fmt(&self) -> Result<String, String> {
         let storage = self.tensor.storage();
-        let cpu_storage = *storage.cpu_get_raw();
+        let cpu_storage = storage.get_cpu_storage();
         let layout = self.tensor.layout();
         let shape = layout.shape();
         let dims = shape.dims();
@@ -40,22 +40,22 @@ impl Formatter {
         }
         let formatted_string = match cpu_storage {
             crate::cpu_backend::CpuStorage::U8(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
             crate::cpu_backend::CpuStorage::U32(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
             crate::cpu_backend::CpuStorage::I64(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
             crate::cpu_backend::CpuStorage::I32(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
             crate::cpu_backend::CpuStorage::F32(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
             crate::cpu_backend::CpuStorage::F64(data) => {
-                self.fmt_tensor_as_string(data, dims, &stride, start_offset)
+                self.fmt_tensor_as_string(&data, dims, &stride, start_offset)
             }
         };
         Ok(formatted_string)

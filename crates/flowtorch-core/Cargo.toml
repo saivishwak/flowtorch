@@ -11,5 +11,10 @@ repository = "https://github.com/saivishwak/flowtorch"
 keywords = ["blas", "tensor", "machine-learning"]
 categories = ["science"]
 
+[features]
+default = []
+cuda = ["cudarc"]
+
 [dependencies]
+cudarc = { workspace = true, optional = true }
 thiserror = "1.0.61"

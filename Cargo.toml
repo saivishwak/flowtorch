@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/flowtorch-core", "crates/flowtorch-py"]
 
-exclude = ["flowcuda-kernels"]
+exclude = ["crates/flowcuda-kernels"]
 
 resolver = "2"
 

@@ -8,7 +8,7 @@ use tensor::Tensor;
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn flowtorch_py(_py: Python, m: &PyModule) -> PyResult<()> {
+fn flowtorch_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Shape>()?;
     m.add_class::<Tensor>()?;
     Ok(())

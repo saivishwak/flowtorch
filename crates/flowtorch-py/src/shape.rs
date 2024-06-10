@@ -1,4 +1,4 @@
-use flowtorch_core::Shape as ExternalShape;
+use flowtorch::Shape as ExternalShape;
 use pyo3::prelude::*;
 
 #[pyclass]

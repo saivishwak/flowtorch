@@ -1,4 +1,4 @@
-use flowtorch_core::Tensor as ExternalTensor;
+use flowtorch::Tensor as ExternalTensor;
 use pyo3::prelude::*;
 
 #[pyclass]

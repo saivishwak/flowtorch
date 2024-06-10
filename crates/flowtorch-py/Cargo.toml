@@ -9,5 +9,10 @@ name = "flowtorch_py"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.20.0"
-flowtorch-core = { path = "../flowtorch-core", version = "0.1.0" }
+pyo3 = "0.21.2"
+flowtorch = { workspace = true }
+
+[features]
+default = []
+cuda = ["flowtorch/cuda"]
+

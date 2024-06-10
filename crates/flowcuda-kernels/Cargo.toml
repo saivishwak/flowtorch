@@ -2,13 +2,10 @@
 categories = ["science", "cuda"]
 authors = ["Sai Vishwak K <saivishwak40@gmail.com>"]
 name = "flowcuda-kernels"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
+version = "0.1.0"
+edition = "2021"
 description = "Cuda Kernels for flowtorch"
 keywords = ["blas", "tensor", "machine-learning", "CUDA"]
-readme.workspace = true
 
 [build-dependencies]
 bindgen_cuda = "0.1.5"

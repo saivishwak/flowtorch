@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*"]
+members = ["crates/flowtorch-core", "crates/flowtorch-py"]
 
 exclude = ["flowcuda-kernels"]
 

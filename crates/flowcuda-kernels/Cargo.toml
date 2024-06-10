@@ -1,13 +1,13 @@
 [package]
+categories = ["science", "cuda"]
+authors = ["Sai Vishwak K <saivishwak40@gmail.com>"]
 name = "flowcuda-kernels"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description.workspace = true
 repository.workspace = true
-keywords.workspace = true
-categories.workspace = true
-authors = ["Sai Vishwak K <saivishwak40@gmail.com>"]
+description = "Cuda Kernels for flowtorch"
+keywords = ["blas", "tensor", "machine-learning", "CUDA"]
 readme.workspace = true
 
 [dependencies]

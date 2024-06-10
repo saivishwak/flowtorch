@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/*"]
 
-exclude = ["candle-kernels"]
+exclude = ["flowcuda-kernels"]
 
 resolver = "2"
 

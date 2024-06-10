@@ -12,7 +12,7 @@ keywords = ["blas", "tensor", "machine-learning"]
 categories = ["science"]
 
 [features]
-default = ["cuda"]
+default = []
 cuda = ["cudarc", "dep:flowcuda-kernels"]
 
 [dependencies]

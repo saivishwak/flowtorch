@@ -23,18 +23,14 @@ impl Storage {
     pub fn dtype(&self) -> DType {
         match self {
             Self::Cpu(storage) => storage.dtype(),
-            Self::Cuda(storage) => return storage.dtype(),
+            Self::Cuda(storage) => storage.dtype(),
         }
     }
 
     pub fn get_cpu_storage(&self) -> CpuStorage {
         match self {
-            Self::Cpu(storage) => {
-                return storage.get_cpu_storage();
-            }
-            Self::Cuda(storage) => {
-                return storage.get_cpu_storage();
-            }
+            Self::Cpu(storage) => storage.get_cpu_storage(),
+            Self::Cuda(storage) => storage.get_cpu_storage(),
         }
     }
 
@@ -62,7 +58,10 @@ impl Storage {
                 Ok(Storage::Cpu(storage))
             }
             //TODO
-            (Storage::Cuda(_), Storage::Cuda(_)) => todo!(),
+            (Storage::Cuda(_lhs), Storage::Cuda(_rhs)) => {
+                //let storage = lhs.binary_impl::<B>(rhs)?;
+                todo!()
+            }
             _ => todo!(),
         }
     }

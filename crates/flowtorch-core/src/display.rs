@@ -16,16 +16,16 @@ impl Display for Tensor {
         let formatted_string = self.fmt(None);
         match formatted_string {
             Ok(string) => {
-                return write!(
+                write!(
                     f,
                     "Tensor({}, dtype; {}, device; {})",
                     string,
                     self.dtype(),
                     self.device()
-                );
+                )
             }
             Err(e) => {
-                return write!(f, "{}", e);
+                write!(f, "{}", e)
             }
         }
     }

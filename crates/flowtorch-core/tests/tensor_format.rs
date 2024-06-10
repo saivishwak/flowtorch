@@ -9,7 +9,7 @@ fn format_no_treshold() {
         "[0]",
         Tensor::from_vec(vec![0i64], (1,), device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
             .as_str()
     );
@@ -17,7 +17,7 @@ fn format_no_treshold() {
         "[1]",
         Tensor::from_vec(vec![1.0], (1,), device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
             .as_str()
     );
@@ -25,7 +25,7 @@ fn format_no_treshold() {
         "[1, 2, 3]",
         Tensor::new(&[1.0, 2.0, 3.0], device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
             .as_str()
     );
@@ -40,7 +40,7 @@ fn format_no_treshold() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
         .as_str()
     );
@@ -48,7 +48,7 @@ fn format_no_treshold() {
         "[[[1], [1]]]",
         Tensor::new(&[[[1.0f32], [1.0]]], device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
             .as_str()
     );
@@ -75,7 +75,7 @@ fn format_no_treshold() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
         .as_str()
     );
@@ -84,7 +84,7 @@ fn format_no_treshold() {
         "[0, 0, 0]",
         Tensor::zeros(3, DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 
@@ -92,7 +92,7 @@ fn format_no_treshold() {
         "[1, 1, 1]",
         Tensor::ones(3, DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 
@@ -100,7 +100,7 @@ fn format_no_treshold() {
         "[[1], [1], [1]]",
         Tensor::ones((3, 1), DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 
@@ -108,7 +108,7 @@ fn format_no_treshold() {
         "[[0], [0], [0]]",
         Tensor::zeros((3, 1), DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 
@@ -116,7 +116,7 @@ fn format_no_treshold() {
         "[[[0, 0]], [[0, 0]], [[0, 0]]]",
         Tensor::zeros((3, 1, 2), DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 
@@ -124,7 +124,7 @@ fn format_no_treshold() {
         "[[[1, 1]], [[1, 1]], [[1, 1]]]",
         Tensor::ones((3, 1, 2), DType::F64, device)
             .unwrap()
-            .fmt(Some(print_options.clone()))
+            .fmt(Some(print_options))
             .unwrap()
     );
 }
@@ -153,7 +153,7 @@ fn format_treshold() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -174,7 +174,7 @@ fn format_treshold() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -190,7 +190,7 @@ fn format_treshold() {
         .unwrap()
         .i(0)
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -206,7 +206,7 @@ fn format_treshold() {
         .unwrap()
         .i(1)
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -222,7 +222,7 @@ fn format_treshold() {
         .unwrap()
         .i((1, 0))
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 }
@@ -251,7 +251,7 @@ fn format_precision() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -274,7 +274,7 @@ fn format_precision() {
         .unwrap()
         .i((3, 0))
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -291,7 +291,7 @@ fn format_precision() {
         .unwrap()
         .i(0)
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -308,7 +308,7 @@ fn format_precision() {
         .unwrap()
         .i(1)
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -324,7 +324,7 @@ fn format_precision() {
         .unwrap()
         .i((1, 0))
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 }
@@ -347,7 +347,7 @@ fn format_profiles() {
         .unwrap()
         .i((1, 0))
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -366,7 +366,7 @@ fn format_profiles() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 
@@ -385,7 +385,7 @@ fn format_profiles() {
             device
         )
         .unwrap()
-        .fmt(Some(print_options.clone()))
+        .fmt(Some(print_options))
         .unwrap()
     );
 }

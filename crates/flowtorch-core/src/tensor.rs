@@ -48,7 +48,7 @@ impl std::ops::Deref for Tensor {
 }
 
 macro_rules! binary_op {
-    ($fn_name:ident, $op_name:ident, $impl_name:ident) => {
+    ($fn_name:ident, $op_name:ident) => {
         pub fn $fn_name(&self, rhs: &Self) -> Result<Self, Error> {
             let shape = self.shape().clone();
             let storage = self
@@ -68,7 +68,7 @@ macro_rules! binary_op {
 }
 
 macro_rules! unary_op {
-    ($fn_name:ident, $op_name:ident, $impl_name:ident) => {
+    ($fn_name:ident, $op_name:ident) => {
         pub fn $fn_name(&self) -> Result<Self, Error> {
             let shape = self.shape().clone();
             let storage = self.storage().unary_impl::<crate::ops::$op_name>()?;
@@ -113,7 +113,7 @@ impl Tensor {
     {
         let shape = array.shape()?;
         let storage = device.from_array(array)?;
-        return Self::from_storage(storage, shape, None);
+        Self::from_storage(storage, shape, None)
     }
 
     /// Creates a new Tensor with all zeros with specified Shape and Dtype
@@ -135,7 +135,7 @@ impl Tensor {
     pub fn zeros<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.zeros(&shape, dtype)?;
-        return Self::from_storage(storage, shape, None);
+        Self::from_storage(storage, shape, None)
     }
 
     /// Creates a new Tensor with all ones with specified Shape and Dtype
@@ -157,7 +157,7 @@ impl Tensor {
     pub fn ones<S: Into<Shape>>(shape: S, dtype: DType, device: &Device) -> Result<Self, Error> {
         let shape = shape.into();
         let storage = device.ones(&shape, dtype)?;
-        return Self::from_storage(storage, shape, None);
+        Self::from_storage(storage, shape, None)
     }
 
     /// Creates a new Tensor from a Vec
@@ -191,7 +191,7 @@ impl Tensor {
             ));
         }
         let storage = device.storage_owned(data)?;
-        return Self::from_storage(storage, shape, None);
+        Self::from_storage(storage, shape, None)
     }
 
     fn from_storage<S: Into<Shape>>(
@@ -251,14 +251,14 @@ impl Tensor {
             };
             return Ok(Tensor(Arc::new(tensor_)));
         }
-        return Err(Error::Shape(crate::ShapeError::ReshapeError(String::from(
+        Err(Error::Shape(crate::ShapeError::ReshapeError(String::from(
             "Tensor Layout not contiguous, As of now we only support contiguous memory layout",
-        ))));
+        ))))
     }
 
     /// View is same as Reshape
     pub fn view<S: Into<Shape>>(&mut self, shape: S) -> Result<Self, Error> {
-        return self.reshape(shape);
+        self.reshape(shape)
     }
 
     /// Returns a new tensor that is a narrowed version of input tensor.
@@ -355,7 +355,7 @@ impl Tensor {
         let storage =
             self.storage()
                 .index_select(&indexes.storage(), &self.layout, &indexes.layout, dim)?;
-        return Self::from_storage(storage, Shape::from(dims), None);
+        Self::from_storage(storage, Shape::from(dims), None)
     }
 
     /* Binary Ops */
@@ -385,27 +385,27 @@ impl Tensor {
         let other_offset = (other.layout.start_offset(), other.elem_count());
 
         //Element wise comparision
-        return self_storage.equal(other_storage, self_offset, other_offset);
+        self_storage.equal(other_storage, self_offset, other_offset)
     }
 
-    binary_op!(add, Add, add);
-    binary_op!(mul, Mul, mul);
-    binary_op!(sub, Sub, sub);
-    binary_op!(div, Div, div);
-    binary_op!(max, Maximum, max);
-    binary_op!(min, Minimum, min);
+    binary_op!(add_impl, Add);
+    binary_op!(mul_impl, Mul);
+    binary_op!(sub_impl, Sub);
+    binary_op!(div_impl, Div);
+    binary_op!(max, Maximum);
+    binary_op!(min, Minimum);
 
-    unary_op!(neg, Neg, neg);
-    unary_op!(sqr, Sqr, sqr);
-    unary_op!(sqrt, Sqrt, sqrt);
-    unary_op!(abs, Abs, abs);
-    unary_op!(sin, Sin, sin);
-    unary_op!(cos, Cos, cos);
-    unary_op!(tan, Tan, tan);
-    unary_op!(exp, Exp, exp);
-    unary_op!(log, Log, log);
-    unary_op!(ceil, Ceil, ceil);
-    unary_op!(floor, Floor, floor);
+    unary_op!(neg, Neg);
+    unary_op!(sqr, Sqr);
+    unary_op!(sqrt, Sqrt);
+    unary_op!(abs, Abs);
+    unary_op!(sin, Sin);
+    unary_op!(cos, Cos);
+    unary_op!(tan, Tan);
+    unary_op!(exp, Exp);
+    unary_op!(log, Log);
+    unary_op!(ceil, Ceil);
+    unary_op!(floor, Floor);
 
     /* Access Methods */
 
@@ -550,19 +550,19 @@ impl PartialEq for Tensor {
     }
 }
 
-/// Macro for std binary ops
+// Macro for std binary ops
 macro_rules! std_binary_op {
-    ($op_name:ident, $impl_name: ident) => {
+    ($op_name:ident, $impl_name: ident, $fn_name: ident) => {
         impl<B: std::borrow::Borrow<Tensor>> std::ops::$op_name<B> for Tensor {
             type Output = Result<Self, Error>;
             fn $impl_name(self, rhs: B) -> Self::Output {
-                Tensor::$impl_name(&self, rhs.borrow())
+                Tensor::$fn_name(&self, rhs.borrow())
             }
         }
     };
 }
 
-std_binary_op!(Add, add);
-std_binary_op!(Mul, mul);
-std_binary_op!(Sub, sub);
-std_binary_op!(Div, div);
+std_binary_op!(Add, add, add_impl);
+std_binary_op!(Mul, mul, mul_impl);
+std_binary_op!(Sub, sub, sub_impl);
+std_binary_op!(Div, div, div_impl);

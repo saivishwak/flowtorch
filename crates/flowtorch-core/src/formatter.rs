@@ -65,6 +65,7 @@ impl Formatter {
         format!("{:.1$}", scalar, self.options.precision)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn fmt_vector_str<T: WithDType>(
         &self,
         data: &[T],
@@ -147,11 +148,11 @@ impl Formatter {
     where
         T: WithDType,
     {
-        if data.len() == 0 {
+        if data.is_empty() {
             return String::new();
         }
         //Scalar
-        if dims.len() == 0 {
+        if dims.is_empty() {
             return self.fmt_scalar_str(data[initial_offset]);
         }
 
@@ -169,7 +170,7 @@ impl Formatter {
             self.options.edgeitems,
         );
 
-        format!("{}", result.join(", "))
+        result.join(", ")
     }
 }
 
@@ -239,5 +240,11 @@ impl PrintOptions {
 
     pub fn profile(&self) -> PrintProfiles {
         self.profile
+    }
+}
+
+impl Default for PrintOptions {
+    fn default() -> Self {
+        Self::new()
     }
 }

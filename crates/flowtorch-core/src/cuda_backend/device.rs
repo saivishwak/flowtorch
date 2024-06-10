@@ -1,6 +1,8 @@
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
 pub use cudarc;
+use cudarc::driver::{LaunchAsync, LaunchConfig};
+use flowcuda_kernels::FILL;
 
 use crate::{
     backend::BackendDevice, cpu_backend::CpuStorage, dtype::WithDType, DType, DeviceError,
@@ -15,73 +17,69 @@ pub struct CudaDevice {
     pub(crate) device: Arc<cudarc::driver::CudaDevice>,
 }
 
-macro_rules! alloc_and_init {
-    ($self:ident, $shape:ident, $dtype:ident, $init_val:expr, $err_kind:ident) => {{
-        let shape_vec: Vec<usize> = $shape.into();
-        let num_elements: usize = shape_vec.iter().product();
-        match $dtype {
-            DType::F64 => {
-                let slice = $self.device.htod_copy(vec![$init_val as f64; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::F64(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
-            }
-            DType::F32 => {
-                let slice = $self.device.htod_copy(vec![$init_val as f32; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::F32(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
-            }
-            DType::U8 => {
-                let slice = $self.device.htod_copy(vec![$init_val as u8; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::U8(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
-            }
-            DType::U32 => {
-                let slice = $self.device.htod_copy(vec![$init_val as u32; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::U32(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
-            }
-            DType::I32 => {
-                let slice = $self.device.htod_copy(vec![$init_val as i32; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::I32(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
-            }
-            DType::I64 => {
-                let slice = $self.device.htod_copy(vec![$init_val as i64; num_elements]);
-                if let Ok(s) = slice {
-                    return Ok(CudaStorage {
-                        device: $self.clone(),
-                        slice: CudaStorageSlice::I64(s),
-                    });
-                }
-                return Err(DeviceError::new(DeviceErrorKind::$err_kind));
+macro_rules! allocate_and_fill {
+    ($self:expr, $dtype:ty, $DType: ident, $fill_val:expr, $num_elements:expr, $func:expr) => {{
+        let data = unsafe { $self.device.alloc::<$dtype>($num_elements) };
+        if let Err(e) = data {
+            return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
+                "{}",
+                e
+            )))));
+        }
+        let data = data.unwrap();
+        let launch_config = LaunchConfig::for_num_elems($num_elements as u32);
+        let params = (&data, $fill_val, $num_elements);
+        match unsafe { $func.launch(launch_config, params) } {
+            Ok(_) => Ok(CudaStorage {
+                device: $self.clone(),
+                slice: CudaStorageSlice::$DType(data),
+            }),
+            Err(e) => {
+                return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
+                    "{}",
+                    e
+                )))))
             }
         }
     }};
+}
+
+impl CudaDevice {
+    fn get_and_load_kernal_func(
+        &self,
+        module_name: &'static str,
+        ptx: &'static str,
+    ) -> Result<cudarc::driver::CudaFunction, DeviceError> {
+        let dev: &Arc<cudarc::driver::CudaDevice> = &self.device;
+        if !dev.has_func(module_name, module_name) {
+            if let Err(e) = dev.load_ptx(ptx.into(), module_name, &[module_name]) {
+                let e_str = format!("{}", e);
+                return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(e_str))));
+            }
+        }
+        dev.get_func(module_name, module_name)
+            .ok_or(DeviceError::new(DeviceErrorKind::MissingKernel(
+                module_name,
+            )))
+    }
+
+    fn const_alloc<T: WithDType + cudarc::driver::DeviceRepr>(
+        &self,
+        fill_val: T,
+        shape: &Shape,
+    ) -> Result<CudaStorage, DeviceError> {
+        let shape_vec: Vec<usize> = shape.into();
+        let num_elements: usize = shape_vec.iter().product();
+        let func = self.get_and_load_kernal_func("fill_f32", FILL)?;
+        match T::dtype() {
+            DType::U8 => allocate_and_fill!(self, u8, U8, fill_val, num_elements, func),
+            DType::U32 => allocate_and_fill!(self, u32, U32, fill_val, num_elements, func),
+            DType::I64 => allocate_and_fill!(self, i64, I64, fill_val, num_elements, func),
+            DType::I32 => allocate_and_fill!(self, i32, I32, fill_val, num_elements, func),
+            DType::F32 => allocate_and_fill!(self, f32, F32, fill_val, num_elements, func),
+            DType::F64 => allocate_and_fill!(self, f64, F64, fill_val, num_elements, func),
+        }
+    }
 }
 
 impl BackendDevice for CudaDevice {
@@ -101,11 +99,25 @@ impl BackendDevice for CudaDevice {
     }
 
     fn zeros_impl(&self, shape: &Shape, dtype: DType) -> Result<Self::Storage, DeviceError> {
-        alloc_and_init!(self, shape, dtype, 0, OnesFail)
+        match dtype {
+            DType::F32 => self.const_alloc(0.0f32, shape),
+            DType::F64 => self.const_alloc(0.0f64, shape),
+            DType::U8 => self.const_alloc(0u8, shape),
+            DType::U32 => self.const_alloc(0u32, shape),
+            DType::I32 => self.const_alloc(0i32, shape),
+            DType::I64 => self.const_alloc(0i64, shape),
+        }
     }
 
     fn ones_impl(&self, shape: &Shape, dtype: DType) -> Result<Self::Storage, DeviceError> {
-        alloc_and_init!(self, shape, dtype, 1, OnesFail)
+        match dtype {
+            DType::F32 => self.const_alloc(1.0f32, shape),
+            DType::F64 => self.const_alloc(1.0f64, shape),
+            DType::U8 => self.const_alloc(1u8, shape),
+            DType::U32 => self.const_alloc(1u32, shape),
+            DType::I32 => self.const_alloc(1i32, shape),
+            DType::I64 => self.const_alloc(1i64, shape),
+        }
     }
 
     fn storage_from_slice<T: WithDType>(&self, data: &[T]) -> Result<Self::Storage, DeviceError> {

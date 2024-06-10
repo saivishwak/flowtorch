@@ -36,7 +36,7 @@ impl CpuStorageErrorKind {
             Self::Custom(msg) => format!("Custom CpuStorageError {}", msg.clone()),
             Self::MismatchDtype => String::from("Mismatch Data Type"),
             Self::ContiguousElementDtypeMismatch => {
-                format!("Some of the elements have different DType")
+                "Some of the elements have different DType".to_string()
             }
         }
     }

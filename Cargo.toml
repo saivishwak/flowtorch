@@ -16,4 +16,14 @@ categories = ["science"]
 
 [workspace.dependencies]
 flowtorch = { path = "./crates/flowtorch-core", package = "flowtorch-core", version = "0.1.0" }
-cudarc = { version = "0.11.4", features = ["std", "cublas", "cublaslt", "curand", "driver", "nvrtc", "cuda-version-from-build-system"], default-features=false }
+flowcuda-kernels = { path = "./crates/flowcuda-kernels", package = "flowcuda-kernels", version = "0.1.0" }
+cudarc = { version = "0.11.4", features = [
+  "std",
+  "cublas",
+  "cublaslt",
+  "curand",
+  "driver",
+  "nvrtc",
+  "cuda-version-from-build-system",
+], default-features = false }
+

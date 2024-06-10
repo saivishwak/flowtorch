@@ -60,7 +60,7 @@ impl Device {
         match self {
             Device::Cpu => {
                 let storage = S::to_cpu_storage(&data);
-                return Ok(Storage::Cpu(storage));
+                Ok(Storage::Cpu(storage))
             }
             Device::Cuda(device) => {
                 let cpu_storage = S::to_cpu_storage(&data);
@@ -75,10 +75,8 @@ impl Device {
             Device::Cpu => {
                 let storage = array.to_cpu_storage();
                 match storage {
-                    Ok(s) => return Ok(Storage::Cpu(s)),
-                    Err(_) => {
-                        return Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure));
-                    }
+                    Ok(s) => Ok(Storage::Cpu(s)),
+                    Err(_) => Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure)),
                 }
             }
             Device::Cuda(device) => {
@@ -86,11 +84,9 @@ impl Device {
                 match storage {
                     Ok(s) => {
                         let cuda_storage = device.storage_from_cpu_storage(&s)?;
-                        return Ok(Storage::Cuda(cuda_storage));
+                        Ok(Storage::Cuda(cuda_storage))
                     }
-                    Err(_) => {
-                        return Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure));
-                    }
+                    Err(_) => Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure)),
                 }
             }
         }

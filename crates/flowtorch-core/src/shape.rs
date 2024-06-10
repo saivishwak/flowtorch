@@ -31,7 +31,7 @@ impl Shape {
         let shape = &self.0;
         let mut stride: Vec<usize> = vec![0; shape.len()];
 
-        if shape.len() == 0 {
+        if shape.is_empty() {
             return stride;
         }
 
@@ -47,7 +47,7 @@ impl Shape {
             stride[i] = shape[i + 1] * stride[i + 1];
         }
 
-        return stride;
+        stride
     }
 
     // Return true if the array is C contiguous (aka Row Major)

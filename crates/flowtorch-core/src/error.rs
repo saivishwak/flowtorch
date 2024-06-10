@@ -37,7 +37,7 @@ pub enum ShapeError {
     ShapeMismatch,
     ReshapeError(String),
     Narrow(String),
-    CustomError,
+    CustomError(String),
 }
 
 impl Display for ShapeError {
@@ -45,27 +45,10 @@ impl Display for ShapeError {
         match self {
             Self::EmptyShape => write!(f, "Empty Shape"),
             Self::ShapeMismatch => write!(f, "Shape Mismatch"),
-            Self::CustomError => write!(f, "{}", self),
+            Self::CustomError(msg) => write!(f, "{}", msg),
             Self::ReshapeError(msg) => write!(f, "{}", msg),
             Self::Narrow(msg) => write!(f, "{}", msg),
         }
-    }
-}
-
-#[derive(Error, Debug)]
-pub struct CustomError<'a> {
-    msg: &'a str,
-}
-
-impl<'a> CustomError<'a> {
-    pub fn new(str: &'a str) -> Self {
-        Self { msg: str }
-    }
-}
-
-impl<'a> Display for CustomError<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.msg)
     }
 }
 
@@ -104,21 +87,27 @@ impl Display for StorageError {
 pub enum DeviceErrorKind {
     ZerosFail,
     OnesFail,
-    AllocFail,
+    AllocFail(Option<String>),
     InitFail,
     FromArrayFailure,
+    MissingKernel(&'static str),
     CopyFail,
 }
 
 impl DeviceErrorKind {
     pub fn as_string(&self) -> String {
         match self {
-            Self::ZerosFail => format!("Zeros initialization failed!"),
-            Self::FromArrayFailure => format!("From Array Failed!"),
-            Self::OnesFail => format!("Ones initialization failed!"),
-            Self::AllocFail => format!("Memory allocation failed!"),
-            Self::InitFail => format!("Device Initialization failed!"),
-            Self::CopyFail => format!("Copy of data failed!"),
+            Self::ZerosFail => "Zeros initialization failed!".to_string(),
+            Self::FromArrayFailure => "From Array Failed!".to_string(),
+            Self::OnesFail => "Ones initialization failed!".to_string(),
+            Self::AllocFail(msg) => format!(
+                "Memory allocation failed: {}",
+                msg.clone().unwrap_or(String::new())
+            )
+            .to_string(),
+            Self::InitFail => "Device Initialization failed!".to_string(),
+            Self::CopyFail => "Copy of data failed!".to_string(),
+            DeviceErrorKind::MissingKernel(msg) => format!("Missing Kernal : {}", msg),
         }
     }
 }

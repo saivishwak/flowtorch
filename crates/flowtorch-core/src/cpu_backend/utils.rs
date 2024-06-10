@@ -1,7 +1,7 @@
 // Helper function to compare vectors of any type
 pub(super) fn compare_vecs<T: PartialEq>(
-    vec1: &Vec<T>,
-    vec2: &Vec<T>,
+    vec1: &[T],
+    vec2: &[T],
     vec1_offset: (usize, usize),
     vec2_offset: (usize, usize),
 ) -> bool {
@@ -12,5 +12,5 @@ pub(super) fn compare_vecs<T: PartialEq>(
     if vec1_end - vec1_start != vec2_end - vec2_start {
         return false;
     }
-    &vec1[vec1_start..vec1_end] == &vec2[vec2_start..vec2_end]
+    vec1[vec1_start..vec1_end] == vec2[vec2_start..vec2_end]
 }

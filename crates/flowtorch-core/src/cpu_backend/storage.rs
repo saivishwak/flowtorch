@@ -20,7 +20,7 @@ pub enum CpuStorage {
 
 impl CpuStorage {
     fn get_raw(&self) -> CpuStorage {
-        return self.clone();
+        self.clone()
     }
 
     pub(crate) fn equal(
@@ -103,9 +103,7 @@ impl CpuStorage {
                     .collect();
                 Ok(Self::I64(data))
             }
-            _ => {
-                return Err(Error::Unknown);
-            }
+            _ => Err(Error::Unknown),
         }
     }
 

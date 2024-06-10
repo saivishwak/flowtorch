@@ -12,9 +12,10 @@ keywords = ["blas", "tensor", "machine-learning"]
 categories = ["science"]
 
 [features]
-default = []
-cuda = ["cudarc"]
+default = ["cuda"]
+cuda = ["cudarc", "dep:flowcuda-kernels"]
 
 [dependencies]
 cudarc = { workspace = true, optional = true }
+flowcuda-kernels = { workspace = true, optional = true }
 thiserror = "1.0.61"

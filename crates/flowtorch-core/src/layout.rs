@@ -48,7 +48,7 @@ impl Layout {
 
     // Return true if the array is C contiguous (aka Row Major)
     pub fn is_contiguous(&self) -> bool {
-        return self.shape.is_contiguous(&self.stride);
+        self.shape.is_contiguous(&self.stride)
     }
 
     pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {

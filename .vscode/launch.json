@@ -50,7 +50,8 @@
                 "args": [
                     "test",
                     "--no-run",
-                    "--test=tensor_format",
+                    "--test=tensor_cuda",
+                    "--features=cuda",
                     "--package=flowtorch-core"
                 ],
                 "filter": {

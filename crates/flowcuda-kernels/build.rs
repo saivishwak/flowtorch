@@ -10,6 +10,18 @@ fn main() {
     // Inform Cargo about the dependency on the generated PTX files
     println!("cargo:rerun-if-changed=src");
 
+    // Check if nvcc is available
+    let nvcc_available = Command::new("which")
+        .arg("nvcc")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false);
+
+    if !nvcc_available {
+        eprintln!("Error: nvcc (CUDA compiler) not found. Make sure CUDA Toolkit is installed and added to your PATH.");
+        std::process::exit(1);
+    }
+
     // Compile CUDA files and generate PTX files in the output directory
     let src_dir = Path::new("src");
     let cu_files = fs::read_dir(src_dir)

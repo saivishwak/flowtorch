@@ -1,12 +1,10 @@
-name: Rust
+name: Rust CI
 
 on: 
   push:
     branches: 
       - main
   pull_request:
-
-name: Continuous integration
 
 jobs:
   check:

@@ -1,7 +1,7 @@
 use std::{fmt::Debug, sync::Arc};
 
 pub use cudarc;
-use cudarc::driver::{LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaSlice, LaunchAsync, LaunchConfig};
 use flowcuda_kernels::FILL;
 
 use crate::{
@@ -45,22 +45,37 @@ macro_rules! allocate_and_fill {
 }
 
 impl CudaDevice {
-    fn get_and_load_kernal_func(
+    pub fn get_and_load_kernal_func(
         &self,
-        module_name: &'static str,
+        module_name: &str,
         ptx: &'static str,
     ) -> Result<cudarc::driver::CudaFunction, DeviceError> {
         let dev: &Arc<cudarc::driver::CudaDevice> = &self.device;
         if !dev.has_func(module_name, module_name) {
-            if let Err(e) = dev.load_ptx(ptx.into(), module_name, &[module_name]) {
+            let static_module_name = Box::leak(module_name.to_string().into_boxed_str());
+            if let Err(e) = dev.load_ptx(ptx.into(), module_name, &[static_module_name]) {
                 let e_str = format!("{}", e);
                 return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(e_str))));
             }
         }
         dev.get_func(module_name, module_name)
             .ok_or(DeviceError::new(DeviceErrorKind::MissingKernel(
-                module_name,
+                module_name.to_string(),
             )))
+    }
+
+    pub fn alloc<T: WithDType + cudarc::driver::DeviceRepr>(
+        &self,
+        numel: usize,
+    ) -> Result<CudaSlice<T>, DeviceError> {
+        let data = unsafe { self.device.alloc::<T>(numel) };
+        if let Err(e) = data {
+            return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
+                "{}",
+                e
+            )))));
+        }
+        Ok(data.unwrap())
     }
 
     fn const_alloc<T: WithDType + cudarc::driver::DeviceRepr>(

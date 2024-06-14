@@ -18,16 +18,23 @@ pub enum DType {
     F64,
 }
 
+impl DType {
+    pub fn as_str(&self) -> String {
+        match self {
+            Self::U8 => String::from("u8"),
+            Self::U32 => String::from("u32"),
+            Self::I64 => String::from("i64"),
+            Self::I32 => String::from("i32"),
+            Self::F32 => String::from("f32"),
+            Self::F64 => String::from("f64"),
+        }
+    }
+}
+
 impl Display for DType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::U8 => write!(f, "u8"),
-            Self::U32 => write!(f, "u32"),
-            Self::I64 => write!(f, "i64"),
-            Self::I32 => write!(f, "i32"),
-            Self::F32 => write!(f, "f32"),
-            Self::F64 => write!(f, "f64"),
-        }
+        let str = self.as_str();
+        write!(f, "{}", str)
     }
 }
 

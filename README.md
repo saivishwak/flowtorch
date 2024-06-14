@@ -26,7 +26,7 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add Basic CUDA Device support
 - [ ] Add CUDA Ops
 - [ ] Add to_dtype method to convert the data type
-- [ ] Refactor Error::Unknown
+- [ ] Refactor Error::Unknown and fix todo
 - [ ] Add Basic Back Prop
 - [ ] Add to_device method support for converting the device of Tensor
 - [ ] Add Tensor.to_vec methods, to get different dim vectors

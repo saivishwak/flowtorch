@@ -23,119 +23,6 @@ impl CpuStorage {
         self.clone()
     }
 
-    pub(crate) fn equal(
-        &self,
-        rhs: &Self,
-        lhs_offset: (usize, usize),
-        rhs_offset: (usize, usize),
-    ) -> bool {
-        match (self, rhs) {
-            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
-            }
-            _ => false,
-        }
-    }
-
-    #[allow(unused_variables)]
-    pub(crate) fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
-        match (self, rhs) {
-            (Self::F32(lhs), Self::F32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::f32(*lhs, *rhs))
-                    .collect();
-                Ok(Self::F32(data))
-            }
-            (Self::F64(lhs), Self::F64(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::f64(*lhs, *rhs))
-                    .collect();
-                Ok(Self::F64(data))
-            }
-            (Self::U8(lhs), Self::U8(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::u8(*lhs, *rhs))
-                    .collect();
-                Ok(Self::U8(data))
-            }
-            (Self::U32(lhs), Self::U32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::u32(*lhs, *rhs))
-                    .collect();
-                Ok(Self::U32(data))
-            }
-            (Self::I32(lhs), Self::I32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::i32(*lhs, *rhs))
-                    .collect();
-                Ok(Self::I32(data))
-            }
-            (Self::I64(lhs), Self::I64(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::i64(*lhs, *rhs))
-                    .collect();
-                Ok(Self::I64(data))
-            }
-            _ => Err(Error::Unknown),
-        }
-    }
-
-    pub(crate) fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
-        match self {
-            Self::F32(lhs) => {
-                let data = lhs.iter().map(|v| U::f32(*v)).collect();
-                Ok(Self::F32(data))
-            }
-            Self::F64(lhs) => {
-                let data = lhs.iter().map(|v| U::f64(*v)).collect();
-                Ok(Self::F64(data))
-            }
-            Self::U8(lhs) => {
-                let data = lhs.iter().map(|v| U::u8(*v)).collect();
-                Ok(Self::U8(data))
-            }
-            Self::U32(lhs) => {
-                let data = lhs.iter().map(|v| U::u32(*v)).collect();
-                Ok(Self::U32(data))
-            }
-            Self::I32(lhs) => {
-                let data = lhs.iter().map(|v| U::i32(*v)).collect();
-                Ok(Self::I32(data))
-            }
-            Self::I64(lhs) => {
-                let data = lhs.iter().map(|v| U::i64(*v)).collect();
-                Ok(Self::I64(data))
-            }
-        }
-    }
-
     //TODO - Implement index_select
     #[allow(unused_variables)]
     pub(crate) fn index_select(
@@ -207,5 +94,112 @@ impl BackendStorage for CpuStorage {
 
     fn device(&self) -> &Self::Device {
         &CpuDevice
+    }
+
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+        match self {
+            Self::F32(lhs) => {
+                let data = lhs.iter().map(|v| U::f32(*v)).collect();
+                Ok(Self::F32(data))
+            }
+            Self::F64(lhs) => {
+                let data = lhs.iter().map(|v| U::f64(*v)).collect();
+                Ok(Self::F64(data))
+            }
+            Self::U8(lhs) => {
+                let data = lhs.iter().map(|v| U::u8(*v)).collect();
+                Ok(Self::U8(data))
+            }
+            Self::U32(lhs) => {
+                let data = lhs.iter().map(|v| U::u32(*v)).collect();
+                Ok(Self::U32(data))
+            }
+            Self::I32(lhs) => {
+                let data = lhs.iter().map(|v| U::i32(*v)).collect();
+                Ok(Self::I32(data))
+            }
+            Self::I64(lhs) => {
+                let data = lhs.iter().map(|v| U::i64(*v)).collect();
+                Ok(Self::I64(data))
+            }
+        }
+    }
+    fn equal(&self, rhs: &Self, lhs_offset: (usize, usize), rhs_offset: (usize, usize)) -> bool {
+        match (self, rhs) {
+            (Self::U8(lhs_data), Self::U8(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::U32(lhs_data), Self::U32(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::I64(lhs_data), Self::I64(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::I32(lhs_data), Self::I32(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::F32(lhs_data), Self::F32(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            (Self::F64(lhs_data), Self::F64(rhs_data)) => {
+                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+            }
+            _ => false,
+        }
+    }
+
+    #[allow(unused_variables)]
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+        match (self, rhs) {
+            (Self::F32(lhs), Self::F32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::f32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::F32(data))
+            }
+            (Self::F64(lhs), Self::F64(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::f64(*lhs, *rhs))
+                    .collect();
+                Ok(Self::F64(data))
+            }
+            (Self::U8(lhs), Self::U8(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::u8(*lhs, *rhs))
+                    .collect();
+                Ok(Self::U8(data))
+            }
+            (Self::U32(lhs), Self::U32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::u32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::U32(data))
+            }
+            (Self::I32(lhs), Self::I32(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::i32(*lhs, *rhs))
+                    .collect();
+                Ok(Self::I32(data))
+            }
+            (Self::I64(lhs), Self::I64(rhs)) => {
+                let data = lhs
+                    .iter()
+                    .zip(rhs.iter())
+                    .map(|(lhs, rhs)| B::i64(*lhs, *rhs))
+                    .collect();
+                Ok(Self::I64(data))
+            }
+            _ => Err(Error::Unknown),
+        }
     }
 }

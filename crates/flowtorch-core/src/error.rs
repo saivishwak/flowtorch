@@ -90,7 +90,7 @@ pub enum DeviceErrorKind {
     AllocFail(Option<String>),
     InitFail,
     FromArrayFailure,
-    MissingKernel(&'static str),
+    MissingKernel(String),
     CopyFail,
 }
 

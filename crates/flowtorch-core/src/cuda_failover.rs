@@ -1,6 +1,9 @@
 #![allow(dead_code, unused_variables)]
 // This file is used as a placeholder non cuda compilation of the project
 use crate::backend::{BackendDevice, BackendStorage};
+use crate::ops::BinaryOpT;
+use crate::ops::UnaryOpT;
+use crate::Error;
 
 macro_rules! fail {
     () => {
@@ -59,8 +62,10 @@ impl BackendDevice for CudaDevice {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CudaStorage {}
+
+impl CudaStorage {}
 
 impl BackendStorage for CudaStorage {
     type Device = CudaDevice;
@@ -74,6 +79,15 @@ impl BackendStorage for CudaStorage {
     }
 
     fn device(&self) -> &Self::Device {
+        fail!()
+    }
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+        fail!()
+    }
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+        fail!()
+    }
+    fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool {
         fail!()
     }
 }

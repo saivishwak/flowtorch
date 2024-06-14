@@ -57,12 +57,11 @@ impl Storage {
                 let storage = lhs.binary_impl::<B>(rhs)?;
                 Ok(Storage::Cpu(storage))
             }
-            //TODO
-            (Storage::Cuda(_lhs), Storage::Cuda(_rhs)) => {
-                //let storage = lhs.binary_impl::<B>(rhs)?;
-                todo!()
+            (Storage::Cuda(lhs), Storage::Cuda(rhs)) => {
+                let storage = lhs.binary_impl::<B>(rhs)?;
+                Ok(Storage::Cuda(storage))
             }
-            _ => todo!(),
+            _ => Err(Error::Unknown),
         }
     }
 
@@ -72,8 +71,10 @@ impl Storage {
                 let storage = lhs.unary_impl::<U>()?;
                 Ok(Storage::Cpu(storage))
             }
-            //TODO
-            Storage::Cuda(_) => todo!(),
+            Storage::Cuda(lhs) => {
+                let storage = lhs.unary_impl::<U>()?;
+                Ok(Storage::Cuda(storage))
+            }
         }
     }
 
@@ -85,9 +86,8 @@ impl Storage {
     ) -> bool {
         match (self, other) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
-            //TODO
-            (Storage::Cuda(_), Storage::Cuda(_)) => todo!(),
-            _ => todo!(),
+            (Storage::Cuda(lhs), Storage::Cuda(rhs)) => lhs.equal(rhs, self_offset, other_offset),
+            _ => false,
         }
     }
 }

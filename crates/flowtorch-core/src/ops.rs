@@ -35,6 +35,8 @@ pub(crate) enum Op {
 
 pub(crate) trait BinaryOpT {
     const NAME: &'static str;
+    const KERNEL: &'static str;
+    const V: Self;
     fn f32(v1: f32, v2: f32) -> f32;
     fn f64(v1: f64, v2: f64) -> f64;
     fn u8(v1: u8, v2: u8) -> u8;
@@ -45,6 +47,8 @@ pub(crate) trait BinaryOpT {
 
 pub(crate) trait UnaryOpT {
     const NAME: &'static str;
+    const KERNEL: &'static str;
+    const V: Self;
     fn f32(v1: f32) -> f32;
     fn f64(v1: f64) -> f64;
     fn u8(v1: u8) -> u8;
@@ -78,6 +82,8 @@ macro_rules! bin_op {
     ($op:ident, $name: literal, $e: expr) => {
         impl BinaryOpT for $op {
             const NAME: &'static str = $name;
+            const KERNEL: &'static str = concat!("b", $name);
+            const V: Self = $op;
             fn f32(v1: f32, v2: f32) -> f32 {
                 $e(v1, v2)
             }
@@ -119,6 +125,8 @@ macro_rules! unary_op {
     ($op:ident, $name: literal, $a: ident, $e: expr) => {
         impl UnaryOpT for $op {
             const NAME: &'static str = $name;
+            const KERNEL: &'static str = concat!("u", $name);
+            const V: Self = $op;
             fn f32($a: f32) -> f32 {
                 $e
             }
@@ -157,6 +165,8 @@ unary_op!(Exp, "exp", v, v.exp());
 // Adding other Ops which support additional types
 impl UnaryOpT for Neg {
     const NAME: &'static str = "neg";
+    const KERNEL: &'static str = "uneg";
+    const V: Self = Neg;
 
     fn f32(v1: f32) -> f32 {
         -v1
@@ -185,6 +195,8 @@ impl UnaryOpT for Neg {
 
 impl UnaryOpT for Abs {
     const NAME: &'static str = "abs";
+    const KERNEL: &'static str = "uabs";
+    const V: Self = Abs;
 
     fn f32(v1: f32) -> f32 {
         v1.abs()
@@ -213,6 +225,8 @@ impl UnaryOpT for Abs {
 
 impl UnaryOpT for Ceil {
     const NAME: &'static str = "ceil";
+    const KERNEL: &'static str = "uceil";
+    const V: Self = Ceil;
 
     fn f32(v1: f32) -> f32 {
         v1.ceil()
@@ -241,6 +255,8 @@ impl UnaryOpT for Ceil {
 
 impl UnaryOpT for Floor {
     const NAME: &'static str = "floor";
+    const KERNEL: &'static str = "ufloor";
+    const V: Self = Floor;
 
     fn f32(v1: f32) -> f32 {
         v1.floor()

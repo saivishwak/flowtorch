@@ -10,7 +10,7 @@ jobs:
     name: coverage
     runs-on: ubuntu-latest
     container:
-      image: xd009642/tarpaulin:develop-nightly
+      image: xd009642/tarpaulin:develop
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
@@ -18,7 +18,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-          apt-get update && apt install -y python3-pip && pip3 install maturin && cargo tarpaulin --verbose --workspace --timeout 120 --out xml
+          apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2

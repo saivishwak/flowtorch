@@ -2,6 +2,7 @@
 [![Latest version](https://img.shields.io/crates/v/flowtorch-core.svg)](https://crates.io/crates/flowtorch-core)
 [![Documentation](https://docs.rs/flowtorch-core/badge.svg)](https://docs.rs/flowtorch-core)
 ![License](https://img.shields.io/crates/l/flowtorch-core.svg)
+![CodeCov](https://codecov.io/gh/saivishwak/flowtorch/branch/master/graph/badge.svg?flag=codecov)
 
 Safe and Performant Scientific Computing Library.
 

@@ -51,6 +51,10 @@ impl Layout {
         self.shape.is_contiguous(&self.stride)
     }
 
+    pub fn broadcast_as(&self, shape: Shape) -> Result<Self, Error> {
+        todo!()
+    }
+
     pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {
         let dims = self.shape.dims();
         if dim >= dims.len() {

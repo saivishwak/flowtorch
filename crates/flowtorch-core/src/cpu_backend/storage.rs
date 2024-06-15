@@ -96,6 +96,139 @@ impl BackendStorage for CpuStorage {
         &CpuDevice
     }
 
+    fn to_dtype(&self, _layout: &Layout, dtype: DType) -> Result<Self, Error> {
+        if self.dtype() == dtype {
+            return Ok(self.clone());
+        }
+        //TODO - Instead of iterating over everything, use the layout to get the strided elements only for perf
+        // And also get a better way to handle this many dtypes
+        match (self, dtype) {
+            (CpuStorage::U8(data), DType::U32) => {
+                let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
+                Ok(CpuStorage::U32(data))
+            }
+            (CpuStorage::U8(data), DType::I64) => {
+                let data: Vec<i64> = data.iter().map(|&v| v as i64).collect();
+                Ok(CpuStorage::I64(data))
+            }
+            (CpuStorage::U8(data), DType::I32) => {
+                let data: Vec<i32> = data.iter().map(|&v| v as i32).collect();
+                Ok(CpuStorage::I32(data))
+            }
+            (CpuStorage::U8(data), DType::F32) => {
+                let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
+                Ok(CpuStorage::F32(data))
+            }
+            (CpuStorage::U8(data), DType::F64) => {
+                let data: Vec<f64> = data.iter().map(|&v| v as f64).collect();
+                Ok(CpuStorage::F64(data))
+            }
+            (CpuStorage::U32(data), DType::U8) => {
+                let data: Vec<u8> = data.iter().map(|&v| v as u8).collect();
+                Ok(CpuStorage::U8(data))
+            }
+            (CpuStorage::U32(data), DType::I64) => {
+                let data: Vec<i64> = data.iter().map(|&v| v as i64).collect();
+                Ok(CpuStorage::I64(data))
+            }
+            (CpuStorage::U32(data), DType::I32) => {
+                let data: Vec<i32> = data.iter().map(|&v| v as i32).collect();
+                Ok(CpuStorage::I32(data))
+            }
+            (CpuStorage::U32(data), DType::F32) => {
+                let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
+                Ok(CpuStorage::F32(data))
+            }
+            (CpuStorage::U32(data), DType::F64) => {
+                let data: Vec<f64> = data.iter().map(|&v| v as f64).collect();
+                Ok(CpuStorage::F64(data))
+            }
+            (CpuStorage::I32(data), DType::U8) => {
+                let data: Vec<u8> = data.iter().map(|&v| v as u8).collect();
+                Ok(CpuStorage::U8(data))
+            }
+            (CpuStorage::I32(data), DType::U32) => {
+                let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
+                Ok(CpuStorage::U32(data))
+            }
+            (CpuStorage::I32(data), DType::I64) => {
+                let data: Vec<i64> = data.iter().map(|&v| v as i64).collect();
+                Ok(CpuStorage::I64(data))
+            }
+            (CpuStorage::I32(data), DType::F32) => {
+                let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
+                Ok(CpuStorage::F32(data))
+            }
+            (CpuStorage::I32(data), DType::F64) => {
+                let data: Vec<f64> = data.iter().map(|&v| v as f64).collect();
+                Ok(CpuStorage::F64(data))
+            }
+            (CpuStorage::I64(data), DType::U8) => {
+                let data: Vec<u8> = data.iter().map(|&v| v as u8).collect();
+                Ok(CpuStorage::U8(data))
+            }
+            (CpuStorage::I64(data), DType::U32) => {
+                let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
+                Ok(CpuStorage::U32(data))
+            }
+            (CpuStorage::I64(data), DType::I32) => {
+                let data: Vec<i32> = data.iter().map(|&v| v as i32).collect();
+                Ok(CpuStorage::I32(data))
+            }
+            (CpuStorage::I64(data), DType::F32) => {
+                let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
+                Ok(CpuStorage::F32(data))
+            }
+            (CpuStorage::I64(data), DType::F64) => {
+                let data: Vec<f64> = data.iter().map(|&v| v as f64).collect();
+                Ok(CpuStorage::F64(data))
+            }
+            (CpuStorage::F32(data), DType::U8) => {
+                let data: Vec<u8> = data.iter().map(|&v| v as u8).collect();
+                Ok(CpuStorage::U8(data))
+            }
+            (CpuStorage::F32(data), DType::U32) => {
+                let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
+                Ok(CpuStorage::U32(data))
+            }
+            (CpuStorage::F32(data), DType::I64) => {
+                let data: Vec<i64> = data.iter().map(|&v| v as i64).collect();
+                Ok(CpuStorage::I64(data))
+            }
+            (CpuStorage::F32(data), DType::I32) => {
+                let data: Vec<i32> = data.iter().map(|&v| v as i32).collect();
+                Ok(CpuStorage::I32(data))
+            }
+            (CpuStorage::F32(data), DType::F64) => {
+                let data: Vec<f64> = data.iter().map(|&v| v as f64).collect();
+                Ok(CpuStorage::F64(data))
+            }
+            (CpuStorage::F64(data), DType::U8) => {
+                let data: Vec<u8> = data.iter().map(|&v| v as u8).collect();
+                Ok(CpuStorage::U8(data))
+            }
+            (CpuStorage::F64(data), DType::U32) => {
+                let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
+                Ok(CpuStorage::U32(data))
+            }
+            (CpuStorage::F64(data), DType::I64) => {
+                let data: Vec<i64> = data.iter().map(|&v| v as i64).collect();
+                Ok(CpuStorage::I64(data))
+            }
+            (CpuStorage::F64(data), DType::I32) => {
+                let data: Vec<i32> = data.iter().map(|&v| v as i32).collect();
+                Ok(CpuStorage::I32(data))
+            }
+            (CpuStorage::F64(data), DType::F32) => {
+                let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
+                Ok(CpuStorage::F32(data))
+            }
+            _ => {
+                return Err(Error::Unimplemented("Data type conversion not found"));
+            }
+        }
+    }
+
     fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
         match self {
             Self::F32(lhs) => {

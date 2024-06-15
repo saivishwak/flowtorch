@@ -46,6 +46,7 @@ pub use indexer::*;
 pub use shape::Shape;
 pub use tensor::*;
 mod backend;
+mod scalar;
 
 #[cfg(feature = "cuda")]
 pub mod cuda_backend;

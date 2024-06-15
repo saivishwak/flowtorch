@@ -28,14 +28,16 @@ pub enum CudaStorageSlice {
     F64(CudaSlice<f64>),
 }
 
+type S = CudaStorageSlice;
+
 #[derive(Debug)]
 pub struct CudaStorage {
     pub device: CudaDevice,
-    pub slice: CudaStorageSlice,
+    pub slice: S,
 }
 
 impl CudaStorage {
-    pub fn new(device: CudaDevice, slice: CudaStorageSlice) -> Self {
+    pub fn new(device: CudaDevice, slice: S) -> Self {
         Self { device, slice }
     }
 }
@@ -76,17 +78,21 @@ impl BackendStorage for CudaStorage {
     fn dtype(&self) -> DType {
         let slice = &self.slice;
         match slice {
-            CudaStorageSlice::U8(_) => DType::U8,
-            CudaStorageSlice::U32(_) => DType::U32,
-            CudaStorageSlice::I32(_) => DType::I32,
-            CudaStorageSlice::I64(_) => DType::I64,
-            CudaStorageSlice::F32(_) => DType::F32,
-            CudaStorageSlice::F64(_) => DType::F64,
+            S::U8(_) => DType::U8,
+            S::U32(_) => DType::U32,
+            S::I32(_) => DType::I32,
+            S::I64(_) => DType::I64,
+            S::F32(_) => DType::F32,
+            S::F64(_) => DType::F64,
         }
     }
 
     fn device(&self) -> &Self::Device {
         &self.device
+    }
+
+    fn to_dtype(&self, layout: &crate::layout::Layout, dtype: DType) -> Result<Self, Error> {
+        todo!()
     }
 
     fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {

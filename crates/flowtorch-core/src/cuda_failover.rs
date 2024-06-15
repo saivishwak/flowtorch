@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_variables)]
 // This file is used as a placeholder non cuda compilation of the project
 use crate::backend::{BackendDevice, BackendStorage};
+use crate::dtype::DType;
 use crate::ops::BinaryOpT;
 use crate::ops::UnaryOpT;
 use crate::Error;
@@ -81,6 +82,11 @@ impl BackendStorage for CudaStorage {
     fn device(&self) -> &Self::Device {
         fail!()
     }
+
+    fn to_dtype(&self, layout: &crate::layout::Layout, dtype: DType) -> Result<Self, Error> {
+        fail!()
+    }
+
     fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
         fail!()
     }

@@ -1,5 +1,6 @@
 #include <math.h>
 
+// TODO : Support column major format
 #define UNARY_OP(TYPENAME, FN_NAME, FUNC)                                                    \
   extern "C" __global__ void FN_NAME(const size_t numel, const TYPENAME *lhs, TYPENAME *out) \
   {                                                                                          \

@@ -2,10 +2,12 @@
 use std::sync::{Arc, RwLock};
 
 use crate::{
+    backend::{BackendDevice, BackendStorage},
     dtype::WithDType,
     layout::{Layout, Stride},
     ndarray::NdArray,
-    ops::Op,
+    ops::{CmpOp, Op},
+    scalar::TensorOrScalar,
     shape::Shape,
     storage::Storage,
     DType, Device, Error, ShapeError,
@@ -358,7 +360,25 @@ impl Tensor {
         Self::from_storage(storage, Shape::from(dims), None)
     }
 
-    /* Binary Ops */
+    /* Ops */
+    binary_op!(add_impl, Add);
+    binary_op!(mul_impl, Mul);
+    binary_op!(sub_impl, Sub);
+    binary_op!(div_impl, Div);
+    binary_op!(max, Maximum);
+    binary_op!(min, Minimum);
+
+    unary_op!(neg, Neg);
+    unary_op!(sqr, Sqr);
+    unary_op!(sqrt, Sqrt);
+    unary_op!(abs, Abs);
+    unary_op!(sin, Sin);
+    unary_op!(cos, Cos);
+    unary_op!(tan, Tan);
+    unary_op!(exp, Exp);
+    unary_op!(log, Log);
+    unary_op!(ceil, Ceil);
+    unary_op!(floor, Floor);
 
     /// Return true if tensors are equal
     /// Two Tensors are equal if their shapes and elements are equal
@@ -388,24 +408,70 @@ impl Tensor {
         self_storage.equal(other_storage, self_offset, other_offset)
     }
 
-    binary_op!(add_impl, Add);
-    binary_op!(mul_impl, Mul);
-    binary_op!(sub_impl, Sub);
-    binary_op!(div_impl, Div);
-    binary_op!(max, Maximum);
-    binary_op!(min, Minimum);
+    //TODO - Need to be able to to scalar + tensor  as well, i.e self can be a tensor dereived from scalar
+    // similar to 10 + torch.ones((123), dtype=torch.bool)
+    fn cmp<T: TensorOrScalar>(&self, other: T, op: CmpOp) -> Result<Self, Error> {
+        let rhs = match other.to_tensor_scalar()? {
+            crate::scalar::TensorScalar::Tensor(rhs) => rhs,
+            crate::scalar::TensorScalar::Scalar(rhs) => rhs
+                .to_dtype(self.dtype())?
+                .to_device(&self.device())?
+                .broadcast_as(self.shape())?,
+        };
+        let shape = self.same_shape_binary_op(&rhs, "cmp")?;
+        let storage = self
+            .storage()
+            .cmp(&rhs.storage(), &self.layout, &rhs.layout)?;
+        return Self::from_storage(storage, shape, Some(crate::ops::Op::Cmp(self.clone(), op)));
+    }
 
-    unary_op!(neg, Neg);
-    unary_op!(sqr, Sqr);
-    unary_op!(sqrt, Sqrt);
-    unary_op!(abs, Abs);
-    unary_op!(sin, Sin);
-    unary_op!(cos, Cos);
-    unary_op!(tan, Tan);
-    unary_op!(exp, Exp);
-    unary_op!(log, Log);
-    unary_op!(ceil, Ceil);
-    unary_op!(floor, Floor);
+    /// Element-wise equality.
+    pub fn eq<T: TensorOrScalar>(&self, rhs: T) -> Result<Self, Error> {
+        self.cmp(rhs, CmpOp::Eq)
+    }
+
+    /* Conversion Methos */
+    pub fn to_device(&self, device: &Device) -> Result<Self, Error> {
+        if self.device().is_same_device(device) {
+            return Ok(self.clone());
+        }
+        let storage = match (&*self.storage(), device) {
+            (Storage::Cpu(storage), Device::Cpu) => Storage::Cpu(storage.clone()),
+            (Storage::Cpu(storage), Device::Cuda(cuda)) => {
+                let cuda_storage = cuda.storage_from_cpu_storage(storage)?;
+                Storage::Cuda(cuda_storage)
+            }
+            (Storage::Cuda(storage), Device::Cpu) => {
+                let cpu_storage = storage.get_cpu_storage();
+                Storage::Cpu(cpu_storage)
+            }
+            (Storage::Cuda(storage), Device::Cuda(cuda)) => {
+                //Here the devices can be different in CUDA, avoid when GPU ID's are the same
+                let cpu_storage = storage.get_cpu_storage();
+                Storage::Cuda(cuda.storage_from_cpu_storage(&cpu_storage)?)
+            }
+            //Adding Unreachable pattern for later GPU Backends
+            #[allow(unreachable_patterns)]
+            _ => return Err(Error::Unimplemented("Device Conversion not available")),
+        };
+        let tensor_ = Tensor_ {
+            storage: Arc::new(RwLock::new(storage)),
+            layout: self.layout.clone(),
+            op: None,
+            device: device.clone(),
+        };
+        Ok(Tensor(Arc::new(tensor_)))
+    }
+
+    pub fn to_dtype(&self, dtype: DType) -> Result<Self, Error> {
+        if self.dtype() == dtype {
+            Ok(self.clone())
+        } else {
+            let shape = self.shape();
+            let storage = self.storage().to_dtype(self.layout(), dtype)?;
+            Self::from_storage(storage, shape.clone(), None)
+        }
+    }
 
     /* Access Methods */
 
@@ -542,13 +608,49 @@ impl Tensor {
     pub fn elem_count(&self) -> usize {
         self.layout.shape().elem_count()
     }
-}
 
-impl PartialEq for Tensor {
-    fn eq(&self, other: &Self) -> bool {
-        self.equal(other)
+    /* Utility Methods */
+
+    pub fn broadcast_as<S: Into<Shape>>(&self, shape: S) -> Result<Self, Error> {
+        let tensor_ = Tensor_ {
+            storage: self.storage.clone(),
+            layout: self.layout.broadcast_as(shape.into())?,
+            op: None,
+            device: self.device.clone(),
+        };
+        Ok(Tensor(Arc::new(tensor_)))
+    }
+
+    pub(crate) fn same_shape_binary_op(
+        &self,
+        rhs: &Self,
+        op: &'static str,
+    ) -> Result<Shape, Error> {
+        let lhs = self.shape();
+        let rhs = rhs.shape();
+        if lhs != rhs {
+            Err(Error::ShapeMismatchBinaryOp(String::from(op)))
+        } else {
+            Ok(lhs)
+        }
     }
 }
+
+// impl PartialEq for Tensor {
+//     fn eq(&self, other: &Self) -> bool {
+//         todo!()
+//     }
+// }
+
+// impl PartialOrd for Tensor {
+//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+//         todo!()
+//     }
+
+//     fn ge(&self, other: &Self) -> bool {
+//         todo!()
+//     }
+// }
 
 // Macro for std binary ops
 macro_rules! std_binary_op {

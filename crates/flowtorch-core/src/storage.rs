@@ -27,11 +27,22 @@ impl Storage {
         }
     }
 
+    pub fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, Error> {
+        match self {
+            Self::Cpu(storage) => Ok(Storage::Cpu(storage.to_dtype(layout, dtype)?)),
+            Self::Cuda(storage) => Ok(Storage::Cuda(storage.to_dtype(layout, dtype)?)),
+        }
+    }
+
     pub fn get_cpu_storage(&self) -> CpuStorage {
         match self {
             Self::Cpu(storage) => storage.get_cpu_storage(),
             Self::Cuda(storage) => storage.get_cpu_storage(),
         }
+    }
+
+    pub fn get_storage_ref(&self) -> &Self {
+        self
     }
 
     pub(crate) fn index_select(
@@ -76,6 +87,15 @@ impl Storage {
                 Ok(Storage::Cuda(storage))
             }
         }
+    }
+
+    pub(crate) fn cmp(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, Error> {
+        todo!()
     }
 
     pub(crate) fn equal(

@@ -9,13 +9,15 @@ use crate::{
 use super::{storage::CudaStorageSlice, utils, CudaStorage};
 use flowcuda_kernels as kernels;
 
+type S = CudaStorageSlice;
+
 pub trait Pair1Runner {
     fn run<T: WithDType + cudarc::driver::DeviceRepr>(
         &self,
         device: CudaDevice,
         lhs: &CudaSlice<T>,
     ) -> Result<CudaSlice<T>, Error>;
-    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<CudaStorageSlice, Error>;
+    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<S, Error>;
 }
 
 pub trait Pair2Runner {
@@ -51,31 +53,14 @@ impl<B: BinaryOpT> Pair2Runner for B {
             Err(_) => Err(Error::Unknown),
         }
     }
-    fn run_op(
-        &self,
-        device: CudaDevice,
-        lhs: &CudaStorage,
-        rhs: &CudaStorage,
-    ) -> Result<CudaStorageSlice, Error> {
+    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage, rhs: &CudaStorage) -> Result<S, Error> {
         let lhs_slice = &lhs.slice;
         let rhs_slice = &rhs.slice;
         match (lhs_slice, rhs_slice) {
-            (CudaStorageSlice::F32(lhs), CudaStorageSlice::F32(rhs)) => {
-                let s = self.run(device, lhs, rhs)?;
-                Ok(CudaStorageSlice::F32(s))
-            }
-            (CudaStorageSlice::F64(lhs), CudaStorageSlice::F64(rhs)) => {
-                let s = self.run(device, lhs, rhs)?;
-                Ok(CudaStorageSlice::F64(s))
-            }
-            (CudaStorageSlice::I32(lhs), CudaStorageSlice::I32(rhs)) => {
-                let s = self.run(device, lhs, rhs)?;
-                Ok(CudaStorageSlice::I32(s))
-            }
-            (CudaStorageSlice::I64(lhs), CudaStorageSlice::I64(rhs)) => {
-                let s = self.run(device, lhs, rhs)?;
-                Ok(CudaStorageSlice::I64(s))
-            }
+            (S::F32(lhs), S::F32(rhs)) => Ok(S::F32(self.run(device, lhs, rhs)?)),
+            (S::F64(lhs), S::F64(rhs)) => Ok(S::F64(self.run(device, lhs, rhs)?)),
+            (S::I32(lhs), S::I32(rhs)) => Ok(S::I32(self.run(device, lhs, rhs)?)),
+            (S::I64(lhs), S::I64(rhs)) => Ok(S::I64(self.run(device, lhs, rhs)?)),
             _ => {
                 //Not supported right now for U8 and U32
                 Err(Error::Unknown)
@@ -101,25 +86,13 @@ impl<U: UnaryOpT> Pair1Runner for U {
             Err(_) => Err(Error::Unknown),
         }
     }
-    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<CudaStorageSlice, Error> {
+    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<S, Error> {
         let slice = &lhs.slice;
         match slice {
-            CudaStorageSlice::F32(lhs) => {
-                let s = self.run(device, lhs)?;
-                Ok(CudaStorageSlice::F32(s))
-            }
-            CudaStorageSlice::F64(lhs) => {
-                let s = self.run(device, lhs)?;
-                Ok(CudaStorageSlice::F64(s))
-            }
-            CudaStorageSlice::I32(lhs) => {
-                let s = self.run(device, lhs)?;
-                Ok(CudaStorageSlice::I32(s))
-            }
-            CudaStorageSlice::I64(lhs) => {
-                let s = self.run(device, lhs)?;
-                Ok(CudaStorageSlice::I64(s))
-            }
+            S::F32(lhs) => Ok(S::F32(self.run(device, lhs)?)),
+            S::F64(lhs) => Ok(S::F64(self.run(device, lhs)?)),
+            S::I32(lhs) => Ok(S::I32(self.run(device, lhs)?)),
+            S::I64(lhs) => Ok(S::I64(self.run(device, lhs)?)),
             _ => {
                 //Not supported right now for U8 and U32
                 Err(Error::Unknown)

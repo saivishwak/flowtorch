@@ -1,6 +1,11 @@
 # FlowTorch
+[![Latest version](https://img.shields.io/crates/v/flowtorch-core.svg)](https://crates.io/crates/flowtorch-core)
+[![Documentation](https://docs.rs/flowtorch-core/badge.svg)](https://docs.rs/flowtorch-core)
+![License](https://img.shields.io/crates/l/flowtorch-core.svg)
 
-FlowTorch: Safe and Performant Scientific Computing Library
+Safe and Performant Scientific Computing Library.
+
+Right now the library is still in research phase where I am taking time to understand the internal implementations of Candle and Pytorch by reimplementing them. For production usage please try out [Candle](https://github.com/huggingface/candle) because its really awesome.
 
 ====
 
@@ -24,11 +29,11 @@ FlowTorch: Safe and Performant Scientific Computing Library
 - [x] Add Basic Binray Ops to Tensor
 - [x] Add basic unary ops
 - [x] Add Basic CUDA Device support
-- [ ] Add CUDA Ops
+- [x] Add Basic CUDA Ops
+- [x] Add to_device method support for converting the device of Tensor
 - [ ] Add to_dtype method to convert the data type
 - [ ] Refactor Error::Unknown and fix todo
 - [ ] Add Basic Back Prop
-- [ ] Add to_device method support for converting the device of Tensor
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Fix select_index method
 - [ ] Support Fotran Memory layout (colum Major)

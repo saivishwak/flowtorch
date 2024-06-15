@@ -28,33 +28,68 @@ pub enum UnaryOp {
 }
 
 #[derive(Debug)]
+pub enum CmpOp {
+    Eq,
+    Ne,
+    Le,
+    Ge,
+    Lt,
+    Gt,
+}
+
+#[derive(Debug)]
 pub(crate) enum Op {
     Binary(Tensor, Tensor, BinaryOp),
     Unary(Tensor, UnaryOp),
+    Cmp(Tensor, CmpOp),
 }
 
 pub(crate) trait BinaryOpT {
     const NAME: &'static str;
     const KERNEL: &'static str;
     const V: Self;
-    fn f32(v1: f32, v2: f32) -> f32;
-    fn f64(v1: f64, v2: f64) -> f64;
-    fn u8(v1: u8, v2: u8) -> u8;
-    fn u32(v1: u32, v2: u32) -> u32;
-    fn i32(v1: i32, v2: i32) -> i32;
-    fn i64(v1: i64, v2: i64) -> i64;
+    fn f32(v1: f32, v2: f32) -> f32 {
+        unimplemented!("{} op not implemented for f32", Self::NAME)
+    }
+    fn f64(v1: f64, v2: f64) -> f64 {
+        unimplemented!("{} op not implemented for f64", Self::NAME)
+    }
+    fn u8(v1: u8, v2: u8) -> u8 {
+        unimplemented!("{} op not implemented for u8", Self::NAME)
+    }
+    fn u32(v1: u32, v2: u32) -> u32 {
+        unimplemented!("{} op not implemented for u32", Self::NAME)
+    }
+    fn i32(v1: i32, v2: i32) -> i32 {
+        unimplemented!("{} op not implemented for i32", Self::NAME)
+    }
+    fn i64(v1: i64, v2: i64) -> i64 {
+        unimplemented!("{} op not implemented for i64", Self::NAME)
+    }
 }
 
 pub(crate) trait UnaryOpT {
     const NAME: &'static str;
     const KERNEL: &'static str;
     const V: Self;
-    fn f32(v1: f32) -> f32;
-    fn f64(v1: f64) -> f64;
-    fn u8(v1: u8) -> u8;
-    fn u32(v1: u32) -> u32;
-    fn i32(v1: i32) -> i32;
-    fn i64(v1: i64) -> i64;
+    fn f32(v1: f32) -> f32 {
+        unimplemented!("{} op not implemented for f32", Self::NAME)
+    }
+    fn f64(v1: f64) -> f64 {
+        unimplemented!("{} op not implemented for f64", Self::NAME)
+    }
+    fn u8(v1: u8) -> u8 {
+        unimplemented!("{} op not implemented for u8", Self::NAME)
+    }
+    fn u32(v1: u32) -> u32 {
+        unimplemented!("{} op not implemented for u32", Self::NAME)
+    }
+    fn i32(v1: i32) -> i32 {
+        unimplemented!("{} op not implemented for i32", Self::NAME)
+    }
+    fn i64(v1: i64) -> i64 {
+        unimplemented!("{} op not implemented for i64", Self::NAME)
+    }
 }
 
 // Binary Ops
@@ -134,22 +169,6 @@ macro_rules! unary_op {
             fn f64($a: f64) -> f64 {
                 $e
             }
-
-            fn u8($a: u8) -> u8 {
-                todo!("no unary function for u8")
-            }
-
-            fn u32($a: u32) -> u32 {
-                todo!("no unary function for u32")
-            }
-
-            fn i32($a: i32) -> i32 {
-                todo!("no unary function for i32")
-            }
-
-            fn i64($a: i64) -> i64 {
-                todo!("no unary function for i64")
-            }
         }
     };
 }
@@ -174,14 +193,6 @@ impl UnaryOpT for Neg {
 
     fn f64(v1: f64) -> f64 {
         -v1
-    }
-
-    fn u8(v1: u8) -> u8 {
-        todo!("no unary function for u8")
-    }
-
-    fn u32(v1: u32) -> u32 {
-        todo!("no unary function for u32")
     }
 
     fn i32(v1: i32) -> i32 {

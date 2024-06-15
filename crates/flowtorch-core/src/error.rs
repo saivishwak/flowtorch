@@ -27,6 +27,10 @@ pub enum Error {
     },
     #[error("Index error")]
     Index(String),
+    #[error("Shape Mismatch Error {0}")]
+    ShapeMismatchBinaryOp(String),
+    #[error("{0}")]
+    Unimplemented(&'static str),
     #[error("unknown error")]
     Unknown,
 }

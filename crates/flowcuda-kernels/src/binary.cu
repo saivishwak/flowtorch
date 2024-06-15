@@ -1,3 +1,4 @@
+// TODO : Support column major format
 #define BINARY_OP(TYPENAME, FN_NAME, FUNC)                                    \
   extern "C" __global__ void FN_NAME(const size_t numel, const TYPENAME *lhs, \
                                      const TYPENAME *rhs, TYPENAME *out)      \

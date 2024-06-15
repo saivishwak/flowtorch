@@ -1,6 +1,7 @@
 use crate::{
     cpu_backend::CpuStorage,
     dtype::WithDType,
+    layout::Layout,
     ops::{BinaryOpT, UnaryOpT},
     DType, DeviceError, Error, Shape,
 };
@@ -26,6 +27,9 @@ pub trait BackendStorage: Sized + std::fmt::Debug {
 
     fn dtype(&self) -> DType;
     fn device(&self) -> &Self::Device;
+
+    fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, Error>;
+
     fn get_cpu_storage(&self) -> CpuStorage;
 
     fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error>;

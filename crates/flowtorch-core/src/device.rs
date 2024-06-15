@@ -30,6 +30,15 @@ impl Device {
         }
     }
 
+    pub fn is_same_device(&self, rhs: &Self) -> bool {
+        match (self, rhs) {
+            (Device::Cpu, Device::Cpu) => true,
+            (Device::Cpu, Device::Cuda(_)) => false,
+            (Device::Cuda(_), Device::Cpu) => false,
+            (Device::Cuda(_), Device::Cuda(_)) => true,
+        }
+    }
+
     pub fn zeros(&self, shape: &Shape, dtype: DType) -> Result<Storage, DeviceError> {
         match self {
             Device::Cpu => {

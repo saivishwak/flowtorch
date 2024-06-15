@@ -21,7 +21,6 @@ jobs:
           apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4.0.1
         with:
-          # token: ${{secrets.CODECOV_TOKEN}} # not required for public repos
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

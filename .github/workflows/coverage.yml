@@ -18,7 +18,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-          apt install python3 python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml
+          apt-get update && apt-get install python3 && apt-get install -y python3-pip && pip3 install maturin && cargo tarpaulin --verbose --workspace --timeout 120 --out xml
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2

@@ -9,7 +9,16 @@ use crate::{
 use super::{storage::CudaStorageSlice, utils, CudaStorage};
 use flowcuda_kernels as kernels;
 
-pub trait BinrayRunOp {
+pub trait Pair1Runner {
+    fn run<T: WithDType + cudarc::driver::DeviceRepr>(
+        &self,
+        device: CudaDevice,
+        lhs: &CudaSlice<T>,
+    ) -> Result<CudaSlice<T>, Error>;
+    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<CudaStorageSlice, Error>;
+}
+
+pub trait Pair2Runner {
     fn run<T: WithDType + cudarc::driver::DeviceRepr>(
         &self,
         device: CudaDevice,
@@ -24,16 +33,7 @@ pub trait BinrayRunOp {
     ) -> Result<CudaStorageSlice, Error>;
 }
 
-pub trait UnaryRunOp {
-    fn run<T: WithDType + cudarc::driver::DeviceRepr>(
-        &self,
-        device: CudaDevice,
-        lhs: &CudaSlice<T>,
-    ) -> Result<CudaSlice<T>, Error>;
-    fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<CudaStorageSlice, Error>;
-}
-
-impl<B: BinaryOpT> BinrayRunOp for B {
+impl<B: BinaryOpT> Pair2Runner for B {
     fn run<T: WithDType + cudarc::driver::DeviceRepr>(
         &self,
         device: CudaDevice,
@@ -47,12 +47,8 @@ impl<B: BinaryOpT> BinrayRunOp for B {
         let launch_config = LaunchConfig::for_num_elems(numel as u32);
         let params = (numel, lhs, rhs, &data);
         match unsafe { func.launch(launch_config, params) } {
-            Ok(_) => {
-                return Ok(data);
-            }
-            Err(_) => {
-                return Err(Error::Unknown);
-            }
+            Ok(_) => Ok(data),
+            Err(_) => Err(Error::Unknown),
         }
     }
     fn run_op(
@@ -88,26 +84,21 @@ impl<B: BinaryOpT> BinrayRunOp for B {
     }
 }
 
-impl<U: UnaryOpT> UnaryRunOp for U {
+impl<U: UnaryOpT> Pair1Runner for U {
     fn run<T: WithDType + cudarc::driver::DeviceRepr>(
         &self,
         device: CudaDevice,
         lhs: &CudaSlice<T>,
     ) -> Result<CudaSlice<T>, Error> {
         let numel = lhs.len();
-        println!("TESTS {}", &utils::get_kernel_name::<T>(U::KERNEL));
         let func = device
             .get_and_load_kernal_func(&utils::get_kernel_name::<T>(U::KERNEL), kernels::UNARY)?;
         let data = device.alloc::<T>(numel).unwrap();
         let launch_config = LaunchConfig::for_num_elems(numel as u32);
         let params = (numel, lhs, &data);
         match unsafe { func.launch(launch_config, params) } {
-            Ok(_) => {
-                return Ok(data);
-            }
-            Err(_) => {
-                return Err(Error::Unknown);
-            }
+            Ok(_) => Ok(data),
+            Err(_) => Err(Error::Unknown),
         }
     }
     fn run_op(&self, device: CudaDevice, lhs: &CudaStorage) -> Result<CudaStorageSlice, Error> {

@@ -1,5 +1,4 @@
 use crate::{dtype::WithDType, Tensor};
-use std::vec;
 
 // Should adhere to https://github.com/pytorch/pytorch/blob/7b419e8513a024e172eae767e24ec1b849976b13/torch/_tensor_str.py
 
@@ -230,7 +229,7 @@ impl PrintOptions {
             }
             PrintProfiles::Full => {
                 self.precision = 4;
-                self.threshold = std::usize::MAX;
+                self.threshold = usize::MAX;
                 self.edgeitems = 3;
                 self.linewidth = 80;
             }

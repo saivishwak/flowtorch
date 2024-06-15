@@ -15,7 +15,7 @@ use crate::{
 };
 use crate::{DeviceError, DeviceErrorKind};
 
-use super::ops::{BinrayRunOp, UnaryRunOp};
+use super::ops::{Pair1Runner, Pair2Runner};
 use super::utils;
 
 #[derive(Debug)]
@@ -93,7 +93,7 @@ impl BackendStorage for CudaStorage {
         let slice = U::V.run_op(self.device().clone(), self)?;
         Ok(Self {
             device: self.device().clone(),
-            slice: slice,
+            slice,
         })
     }
 
@@ -101,7 +101,7 @@ impl BackendStorage for CudaStorage {
         let slice = B::V.run_op(self.device().clone(), self, rhs)?;
         Ok(Self {
             device: self.device().clone(),
-            slice: slice,
+            slice,
         })
     }
 

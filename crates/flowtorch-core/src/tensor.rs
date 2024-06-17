@@ -2,10 +2,10 @@
 use std::sync::{Arc, RwLock};
 
 use crate::{
+    array::Array,
     backend::{BackendDevice, BackendStorage},
     dtype::WithDType,
     layout::{Layout, Stride},
-    ndarray::NdArray,
     ops::{CmpOp, Op},
     scalar::TensorOrScalar,
     shape::Shape,
@@ -45,7 +45,7 @@ impl std::ops::Deref for Tensor {
     type Target = Tensor_;
 
     fn deref(&self) -> &Self::Target {
-        self.0.as_ref()
+        &self.0
     }
 }
 
@@ -89,9 +89,9 @@ macro_rules! unary_op {
 impl Tensor {
     /* Creation Ops */
 
-    /// Creates a new Tensor from given NDArray
+    /// Creates a new Tensor from given Array
     ///
-    /// The NDArray is a custom n-dimensional array which is converted from Vec and Slices. The New Tensor
+    /// The Array is a custom array implementation to get cpu storage which is converted from Vec and Slices. The New Tensor
     /// will store data in the specified device.
     ///
     /// # Errors
@@ -111,7 +111,7 @@ impl Tensor {
     /// ```
     pub fn new<D>(array: D, device: &Device) -> Result<Self, Error>
     where
-        D: NdArray,
+        D: Array,
     {
         let shape = array.shape()?;
         let storage = device.from_array(array)?;

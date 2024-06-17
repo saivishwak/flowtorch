@@ -32,8 +32,11 @@ Right now the library is still in research phase where I am taking time to under
 - [x] Add Basic CUDA Device support
 - [x] Add Basic CUDA Ops
 - [x] Add to_device method support for converting the device of Tensor
-- [ ] Add to_dtype method to convert the data type
+- [ ] The Array trait implementation right now is doing many recurssive operations, can we minimize it?
 - [ ] Refactor Error::Unknown and fix todo
+- [ ] Add to_dtype method to convert the data type
+- [ ] Fix Comp Op
+- [ ] Improve Code Coverage
 - [ ] Add Basic Back Prop
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Fix select_index method

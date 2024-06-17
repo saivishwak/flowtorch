@@ -25,6 +25,7 @@
 //! in embedded devices and production workloads.
 //!
 
+mod array;
 mod cpu_backend;
 mod device;
 mod display;
@@ -33,7 +34,6 @@ mod error;
 mod formatter;
 mod indexer;
 mod layout;
-mod ndarray;
 mod ops;
 mod shape;
 mod storage;

@@ -5,16 +5,16 @@ use crate::{
     Shape,
 };
 
-pub use error::NDArrayError;
+pub use error::ArrayError;
 
-pub trait NdArray {
-    fn shape(&self) -> Result<Shape, NDArrayError>;
+pub trait Array {
+    fn shape(&self) -> Result<Shape, ArrayError>;
     fn to_cpu_storage(&self) -> Result<CpuStorage, CpuStorageError>;
 }
 
 //Scalar value, hence empty shape
-impl<S: WithDType> NdArray for S {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+impl<S: WithDType> Array for S {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from(()))
     }
 
@@ -24,8 +24,8 @@ impl<S: WithDType> NdArray for S {
 }
 
 //1D dymanic length Array
-impl<S: WithDType> NdArray for &[S] {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+impl<S: WithDType> Array for &[S] {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from(self.len()))
     }
 
@@ -35,8 +35,8 @@ impl<S: WithDType> NdArray for &[S] {
 }
 
 // 1D fixed length Array
-impl<S: WithDType, const N: usize> NdArray for &[S; N] {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+impl<S: WithDType, const N: usize> Array for &[S; N] {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from(self.len()))
     }
 
@@ -46,8 +46,8 @@ impl<S: WithDType, const N: usize> NdArray for &[S; N] {
 }
 
 //2D Array
-impl<S: WithDType, const N: usize, const M: usize> NdArray for &[[S; N]; M] {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+impl<S: WithDType, const N: usize, const M: usize> Array for &[[S; N]; M] {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from((M, N)))
     }
     fn to_cpu_storage(&self) -> Result<CpuStorage, CpuStorageError> {
@@ -56,10 +56,10 @@ impl<S: WithDType, const N: usize, const M: usize> NdArray for &[[S; N]; M] {
 }
 
 //3D Array
-impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize> NdArray
+impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize> Array
     for &[[[S; N3]; N2]; N1]
 {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from((N1, N2, N3)))
     }
 
@@ -75,10 +75,10 @@ impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize> NdArray
 }
 
 //4D Array
-impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize, const N4: usize> NdArray
+impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize, const N4: usize> Array
     for &[[[[S; N4]; N3]; N2]; N1]
 {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         Ok(Shape::from((N1, N2, N3, N4)))
     }
 
@@ -96,10 +96,10 @@ impl<S: WithDType, const N1: usize, const N2: usize, const N3: usize, const N4: 
 }
 
 //Recursive implementation for Vectors
-impl<S: NdArray> NdArray for Vec<S> {
-    fn shape(&self) -> Result<Shape, NDArrayError> {
+impl<S: Array> Array for Vec<S> {
+    fn shape(&self) -> Result<Shape, ArrayError> {
         if self.is_empty() {
-            return Err(NDArrayError::new(error::NDArrayErrorKind::EmptyShape));
+            return Err(ArrayError::new(error::ArrayErrorKind::EmptyShape));
         }
         let shape0 = self[0].shape()?;
         let n = self.len();
@@ -107,7 +107,7 @@ impl<S: NdArray> NdArray for Vec<S> {
             let shape = v.shape()?;
             if shape != shape0 {
                 //two elements have different shapes {shape:?} {shape0:?}
-                return Err(NDArrayError::new(error::NDArrayErrorKind::ShapeMismatch));
+                return Err(ArrayError::new(error::ArrayErrorKind::ShapeMismatch));
             }
         }
         Ok(Shape::from([[n].as_slice(), shape0.dims()].concat()))

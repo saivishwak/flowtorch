@@ -3,29 +3,29 @@ use std::fmt::Display;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub struct NDArrayError {
-    kind: NDArrayErrorKind,
+pub struct ArrayError {
+    kind: ArrayErrorKind,
 }
 
-impl NDArrayError {
-    pub fn new(kind: NDArrayErrorKind) -> Self {
+impl ArrayError {
+    pub fn new(kind: ArrayErrorKind) -> Self {
         Self { kind }
     }
 }
 
-impl Display for NDArrayError {
+impl Display for ArrayError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.kind.as_str())
     }
 }
 
 #[derive(Debug)]
-pub enum NDArrayErrorKind {
+pub enum ArrayErrorKind {
     EmptyShape,
     ShapeMismatch,
 }
 
-impl NDArrayErrorKind {
+impl ArrayErrorKind {
     pub fn as_str(&self) -> &str {
         match self {
             Self::EmptyShape => "Empty Shape",
@@ -34,7 +34,7 @@ impl NDArrayErrorKind {
     }
 }
 
-impl Display for NDArrayErrorKind {
+impl Display for ArrayErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }

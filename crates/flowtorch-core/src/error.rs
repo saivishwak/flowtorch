@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use thiserror::Error;
 
-use crate::{cpu_backend::CpuStorageError, ndarray::NDArrayError, DType};
+use crate::{array::ArrayError, cpu_backend::CpuStorageError, DType};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -20,10 +20,10 @@ pub enum Error {
         #[from]
         source: StorageError,
     },
-    #[error("NDArray")]
-    NDArray {
+    #[error("Array")]
+    Array {
         #[from]
-        source: NDArrayError,
+        source: ArrayError,
     },
     #[error("Index error")]
     Index(String),

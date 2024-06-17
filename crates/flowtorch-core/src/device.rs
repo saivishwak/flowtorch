@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
+use crate::array::Array;
 use crate::backend::BackendDevice;
-use crate::ndarray::NdArray;
 use crate::{cpu_backend::CpuDevice, dtype::WithDType, shape::Shape, storage::Storage, DType};
 use crate::{DeviceError, Error};
 
@@ -79,7 +79,7 @@ impl Device {
         }
     }
 
-    pub fn from_array<D: NdArray>(&self, array: D) -> Result<Storage, DeviceError> {
+    pub fn from_array<D: Array>(&self, array: D) -> Result<Storage, DeviceError> {
         match self {
             Device::Cpu => {
                 let storage = array.to_cpu_storage();

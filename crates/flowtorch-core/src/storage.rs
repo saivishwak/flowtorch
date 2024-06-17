@@ -1,9 +1,10 @@
 use crate::{
     backend::BackendStorage,
     cpu_backend::CpuStorage,
+    error::{Error, StorageError},
     layout::Layout,
     ops::{BinaryOpT, UnaryOpT},
-    DType, Device, Error,
+    DType, Device,
 };
 
 #[derive(Debug)]
@@ -27,7 +28,7 @@ impl Storage {
         }
     }
 
-    pub fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, Error> {
+    pub fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, StorageError> {
         match self {
             Self::Cpu(storage) => Ok(Storage::Cpu(storage.to_dtype(layout, dtype)?)),
             Self::Cuda(storage) => Ok(Storage::Cuda(storage.to_dtype(layout, dtype)?)),
@@ -51,18 +52,18 @@ impl Storage {
         lhs_layout: &Layout,
         rhs_layout: &Layout,
         dim: usize,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, StorageError> {
         match (self, other) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => {
                 let storage = lhs.index_select(rhs, lhs_layout, rhs_layout, dim)?;
                 Ok(Storage::Cpu(storage))
             }
             (Self::Cuda(_), Self::Cuda(_)) => todo!(),
-            _ => Err(Error::Unknown),
+            _ => Err(StorageError::Unknown),
         }
     }
 
-    pub(crate) fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+    pub(crate) fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
         match (self, rhs) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => {
                 let storage = lhs.binary_impl::<B>(rhs)?;
@@ -72,17 +73,17 @@ impl Storage {
                 let storage = lhs.binary_impl::<B>(rhs)?;
                 Ok(Storage::Cuda(storage))
             }
-            _ => Err(Error::Unknown),
+            _ => Err(StorageError::DeviceMismatch),
         }
     }
 
-    pub(crate) fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+    pub(crate) fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
         match self {
             Self::Cpu(lhs) => {
                 let storage = lhs.unary_impl::<U>()?;
                 Ok(Storage::Cpu(storage))
             }
-            Storage::Cuda(lhs) => {
+            Self::Cuda(lhs) => {
                 let storage = lhs.unary_impl::<U>()?;
                 Ok(Storage::Cuda(storage))
             }
@@ -91,9 +92,9 @@ impl Storage {
 
     pub(crate) fn cmp(
         &self,
-        rhs: &Self,
-        lhs_layout: &Layout,
-        rhs_layout: &Layout,
+        _rhs: &Self,
+        _lhs_layout: &Layout,
+        _rhs_layout: &Layout,
     ) -> Result<Self, Error> {
         todo!()
     }

@@ -22,6 +22,10 @@ impl Shape {
         self.0.iter().product()
     }
 
+    pub fn is_1d(&self) -> bool {
+        self.0.len() == 1
+    }
+
     // Method to calculate the number of elements (product of dimensions)
     pub fn num_elements(&self) -> usize {
         self.0.iter().product()

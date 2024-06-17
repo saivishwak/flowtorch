@@ -1,15 +1,91 @@
-use std::fmt::Display;
-
 use thiserror::Error;
 
-use crate::{array::ArrayError, cpu_backend::CpuStorageError, DType};
+use crate::{
+    array::ArrayError,
+    cpu_backend::{CpuDeviceError, CpuStorageError},
+    cuda::{CudaDeviceError, CudaStorageError},
+    DType,
+};
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum LayoutError {
+    #[error("Empty Shape")]
+    EmptyShape,
+    #[error("Shape Mismatch")]
+    ShapeMismatch,
+    #[error("ReshapeError: {0}")]
+    ReshapeError(String),
+    #[error("Narrow Error: {0}")]
+    Narrow(String),
+    #[error("CustomError: {0}")]
+    CustomError(String),
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum StorageError {
+    #[error("CPU Storage Error: {}", .source)]
+    Cpu {
+        #[from]
+        source: CpuStorageError,
+    },
+    #[error("CUDA Storage Error: {}", .source)]
+    Cuda {
+        #[from]
+        source: CudaStorageError,
+    },
+    #[error("Deivce Mismatch")]
+    DeviceMismatch,
+    #[error("DataType Mismatch for {0} and {0}")]
+    DataTypeMismatch(&'static str, &'static str),
+    #[error("unknown error")]
+    Unknown, //Should be use only when we cannot determine the error, which will mostly likely not occur
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum DeviceError {
+    #[error("CPU Device Error: {}", .source)]
+    Cpu {
+        #[from]
+        source: CpuDeviceError,
+    },
+    #[error("CUDA Device Error: {}", .source)]
+    Cuda {
+        #[from]
+        source: CudaDeviceError,
+    },
+    #[error("Zeros initialization failed")]
+    ZerosFail,
+    #[error("Ones initialization failed")]
+    OnesFail,
+    #[error("Zeros initialization failed")]
+    InitFail,
+    #[error("Zeros initialization failed")]
+    FromArrayFailure,
+    #[error("Zeros initialization failed")]
+    DeviceMismatch,
+    #[error("Zeros initialization failed")]
+    CopyFail,
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum OpError {
+    #[error("Binary Op Error: {0}")]
+    Binary(String),
+    #[error("Unary Op Error: {0}")]
+    Unary(String),
+    #[error("CustomError: {0}")]
+    CustomError(String),
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("Tensor initialization failed with Dtype {0:?} due to {1}")]
     TensorInit(Option<DType>, String),
-    #[error("{0}")]
-    Shape(ShapeError),
+    #[error("Layout Error : {}",.source)]
+    Layout {
+        #[from]
+        source: LayoutError,
+    },
     #[error("Error in Device")]
     Device {
         #[from]
@@ -25,116 +101,15 @@ pub enum Error {
         #[from]
         source: ArrayError,
     },
-    #[error("Index error")]
+    #[error("Indexing error: {0}")]
     Index(String),
-    #[error("Shape Mismatch Error {0}")]
-    ShapeMismatchBinaryOp(String),
+    #[error("Op Error: {}", .source)]
+    Op {
+        #[from]
+        source: OpError,
+    },
     #[error("{0}")]
     Unimplemented(&'static str),
     #[error("unknown error")]
-    Unknown,
-}
-
-#[derive(Error, Debug)]
-pub enum ShapeError {
-    EmptyShape,
-    ShapeMismatch,
-    ReshapeError(String),
-    Narrow(String),
-    CustomError(String),
-}
-
-impl Display for ShapeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::EmptyShape => write!(f, "Empty Shape"),
-            Self::ShapeMismatch => write!(f, "Shape Mismatch"),
-            Self::CustomError(msg) => write!(f, "{}", msg),
-            Self::ReshapeError(msg) => write!(f, "{}", msg),
-            Self::Narrow(msg) => write!(f, "{}", msg),
-        }
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum StorageErrorKind {
-    CpuStorage(CpuStorageError),
-}
-
-impl StorageErrorKind {
-    pub fn as_string(&self) -> String {
-        match self {
-            Self::CpuStorage(cpu_storage_error) => format!("{}", cpu_storage_error),
-        }
-    }
-}
-
-impl Display for StorageErrorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_string())
-    }
-}
-
-#[derive(Error, Debug)]
-pub struct StorageError {
-    #[from]
-    source: StorageErrorKind,
-}
-
-impl Display for StorageError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.source.as_string())
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum DeviceErrorKind {
-    ZerosFail,
-    OnesFail,
-    AllocFail(Option<String>),
-    InitFail,
-    FromArrayFailure,
-    MissingKernel(String),
-    CopyFail,
-}
-
-impl DeviceErrorKind {
-    pub fn as_string(&self) -> String {
-        match self {
-            Self::ZerosFail => "Zeros initialization failed!".to_string(),
-            Self::FromArrayFailure => "From Array Failed!".to_string(),
-            Self::OnesFail => "Ones initialization failed!".to_string(),
-            Self::AllocFail(msg) => format!(
-                "Memory allocation failed: {}",
-                msg.clone().unwrap_or(String::new())
-            )
-            .to_string(),
-            Self::InitFail => "Device Initialization failed!".to_string(),
-            Self::CopyFail => "Copy of data failed!".to_string(),
-            DeviceErrorKind::MissingKernel(msg) => format!("Missing Kernal : {}", msg),
-        }
-    }
-}
-
-impl Display for DeviceErrorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_string())
-    }
-}
-
-#[derive(Error, Debug)]
-pub struct DeviceError {
-    kind: DeviceErrorKind,
-}
-
-impl DeviceError {
-    pub fn new(kind: DeviceErrorKind) -> Self {
-        Self { kind }
-    }
-}
-
-impl Display for DeviceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.kind.as_string())
-    }
+    Unknown, //Should be use only when we cannot determine the error, which will mostly likely not occur
 }

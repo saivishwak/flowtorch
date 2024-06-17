@@ -1,7 +1,7 @@
 //! Safe and Performant ML Library for Rust
 //!
 //! ```rust
-//! use flowtorch_core::{DType, Device, Tensor, Error};
+//! use flowtorch_core::{DType, Device, Tensor, error::Error};
 //! # fn main() -> Result<(), Error>{
 //!
 //! let a = Tensor::new(&[0.0f32, 1.0, 2.0], &Device::Cpu)?;
@@ -30,7 +30,7 @@ mod cpu_backend;
 mod device;
 mod display;
 mod dtype;
-mod error;
+pub mod error;
 mod formatter;
 mod indexer;
 mod layout;
@@ -40,7 +40,6 @@ mod storage;
 mod tensor;
 pub use device::{Device, DeviceT};
 pub use dtype::DType;
-pub use error::*;
 pub use formatter::*;
 pub use indexer::*;
 pub use shape::Shape;

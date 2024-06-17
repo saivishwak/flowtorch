@@ -2,7 +2,7 @@ use std::ops::{
     Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 };
 
-use crate::{Error, Tensor};
+use crate::{error::Error, Tensor};
 
 impl Tensor {
     fn index(&self, indices: &[TensorIdx]) -> Result<Self, Error> {

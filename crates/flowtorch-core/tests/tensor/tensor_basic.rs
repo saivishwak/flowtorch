@@ -1,5 +1,3 @@
-mod cuda;
-
 use flowtorch_core::{DType, Device, Shape, Tensor};
 
 fn zeros(device: &Device, dtype: DType) -> Result<Tensor, ()> {

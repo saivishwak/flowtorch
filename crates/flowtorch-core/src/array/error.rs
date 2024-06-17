@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq, Eq)]
 pub struct ArrayError {
     kind: ArrayErrorKind,
 }
@@ -19,7 +19,7 @@ impl Display for ArrayError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug, PartialEq, Eq)]
 pub enum ArrayErrorKind {
     EmptyShape,
     ShapeMismatch,

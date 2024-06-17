@@ -1,12 +1,23 @@
 use crate::{
     backend::BackendStorage,
+    error::StorageError,
     layout::Layout,
     ops::{BinaryOpT, UnaryOpT},
-    DType, Error,
+    DType,
 };
 
 use super::{error::*, utils, CpuDevice};
 use utils::compare_vecs;
+
+#[derive(Debug)]
+pub enum ScalarStorage {
+    F32(f32),
+    F64(f64),
+    U8(u8),
+    U32(u32),
+    I32(i32),
+    I64(i64),
+}
 
 #[derive(Debug, Clone)]
 pub enum CpuStorage {
@@ -19,6 +30,78 @@ pub enum CpuStorage {
 }
 
 impl CpuStorage {
+    pub fn from_scalar_storage_vec(
+        data: Vec<ScalarStorage>,
+    ) -> Result<CpuStorage, CpuStorageError> {
+        if data.is_empty() {
+            return Err(CpuStorageError::EmptyArray);
+        }
+
+        // Match on the type of the first element
+        match &data[0] {
+            ScalarStorage::F32(_) => {
+                let converted_data: Vec<f32> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::F32(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::F32(converted_data))
+            }
+            ScalarStorage::F64(_) => {
+                let converted_data: Vec<f64> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::F64(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::F64(converted_data))
+            }
+            ScalarStorage::U8(_) => {
+                let converted_data: Vec<u8> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::U8(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::U8(converted_data))
+            }
+            ScalarStorage::U32(_) => {
+                let converted_data: Vec<u32> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::U32(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::U32(converted_data))
+            }
+            ScalarStorage::I32(_) => {
+                let converted_data: Vec<i32> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::I32(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::I32(converted_data))
+            }
+            ScalarStorage::I64(_) => {
+                let converted_data: Vec<i64> = data
+                    .into_iter()
+                    .map(|v| match v {
+                        ScalarStorage::I64(d) => d,
+                        _ => unreachable!(), // Should not happen due to the match on first element
+                    })
+                    .collect();
+                Ok(CpuStorage::I64(converted_data))
+            }
+        }
+    }
+
     fn get_raw(&self) -> CpuStorage {
         self.clone()
     }
@@ -31,7 +114,7 @@ impl CpuStorage {
         lhs_layout: &Layout,
         rhs_layout: &Layout,
         dim: usize,
-    ) -> Result<CpuStorage, Error> {
+    ) -> Result<CpuStorage, StorageError> {
         todo!()
     }
 }
@@ -50,9 +133,7 @@ macro_rules! concat_impl {
                                 .map(|s| match s {
                                     Self::$variant(s) => Ok(s.as_slice()),
                                     _ => {
-                                        return Err(CpuStorageError::new(
-                                            CpuStorageErrorKind::ContiguousElementDtypeMismatch,
-                                        ))
+                                        return Err(CpuStorageError::ContiguousElementDtypeMismatch)
                                     }
                                 })
                                 .collect::<Result<Vec<_>, CpuStorageError>>();
@@ -96,12 +177,12 @@ impl BackendStorage for CpuStorage {
         &CpuDevice
     }
 
-    fn to_dtype(&self, _layout: &Layout, dtype: DType) -> Result<Self, Error> {
+    fn to_dtype(&self, _layout: &Layout, dtype: DType) -> Result<Self, StorageError> {
         if self.dtype() == dtype {
             return Ok(self.clone());
         }
         //TODO - Instead of iterating over everything, use the layout to get the strided elements only for perf
-        // And also get a better way to handle this many dtypes
+        // And also get a better way to handle these many dtypes
         match (self, dtype) {
             (CpuStorage::U8(data), DType::U32) => {
                 let data: Vec<u32> = data.iter().map(|&v| v as u32).collect();
@@ -223,13 +304,11 @@ impl BackendStorage for CpuStorage {
                 let data: Vec<f32> = data.iter().map(|&v| v as f32).collect();
                 Ok(CpuStorage::F32(data))
             }
-            _ => {
-                return Err(Error::Unimplemented("Data type conversion not found"));
-            }
+            _ => Err(CpuStorageError::Custom("Data type conversion not found".to_string()).into()),
         }
     }
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
         match self {
             Self::F32(lhs) => {
                 let data = lhs.iter().map(|v| U::f32(*v)).collect();
@@ -282,7 +361,7 @@ impl BackendStorage for CpuStorage {
     }
 
     #[allow(unused_variables)]
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
         match (self, rhs) {
             (Self::F32(lhs), Self::F32(rhs)) => {
                 let data = lhs
@@ -332,7 +411,7 @@ impl BackendStorage for CpuStorage {
                     .collect();
                 Ok(Self::I64(data))
             }
-            _ => Err(Error::Unknown),
+            _ => Err(CpuStorageError::MismatchDtype.into()),
         }
     }
 }

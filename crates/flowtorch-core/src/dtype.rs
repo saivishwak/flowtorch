@@ -41,17 +41,51 @@ impl Display for DType {
 pub trait WithDType: Sized + Copy + 'static + Debug + Display {
     fn to_cpu_storage(data: &[Self]) -> CpuStorage;
     fn dtype() -> DType;
+    //Casting Methods
+    fn to_f32(&self) -> f32;
+    fn to_f64(&self) -> f64;
+    fn to_i32(&self) -> i32;
+    fn to_i64(&self) -> i64;
+    fn to_u8(&self) -> u8;
+    fn to_u32(&self) -> u32;
 }
 
 macro_rules! with_dtype {
     ($ty:ty, $dtype:ident) => {
         impl WithDType for $ty {
             fn to_cpu_storage(data: &[Self]) -> CpuStorage {
-                CpuStorage::$dtype(data.to_vec())
+                //Optimization to limit vector capacity to 1 as these are scalars
+                let mut vec: Vec<$ty> = Vec::with_capacity(1);
+                vec.extend_from_slice(data);
+                CpuStorage::$dtype(vec)
             }
 
             fn dtype() -> DType {
                 DType::$dtype
+            }
+
+            fn to_f32(&self) -> f32 {
+                *self as f32
+            }
+
+            fn to_f64(&self) -> f64 {
+                *self as f64
+            }
+
+            fn to_i64(&self) -> i64 {
+                *self as i64
+            }
+
+            fn to_i32(&self) -> i32 {
+                *self as i32
+            }
+
+            fn to_u8(&self) -> u8 {
+                *self as u8
+            }
+
+            fn to_u32(&self) -> u32 {
+                *self as u32
             }
         }
     };

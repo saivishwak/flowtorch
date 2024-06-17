@@ -1,9 +1,10 @@
 use crate::{
     cpu_backend::CpuStorage,
     dtype::WithDType,
+    error::{DeviceError, StorageError},
     layout::Layout,
     ops::{BinaryOpT, UnaryOpT},
-    DType, DeviceError, Error, Shape,
+    DType, Shape,
 };
 
 pub trait BackendDevice: Sized + std::fmt::Debug + Clone {
@@ -28,11 +29,11 @@ pub trait BackendStorage: Sized + std::fmt::Debug {
     fn dtype(&self) -> DType;
     fn device(&self) -> &Self::Device;
 
-    fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, Error>;
+    fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, StorageError>;
 
     fn get_cpu_storage(&self) -> CpuStorage;
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error>;
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error>;
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError>;
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError>;
     fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool;
 }

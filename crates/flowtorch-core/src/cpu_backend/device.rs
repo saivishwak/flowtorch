@@ -1,4 +1,4 @@
-use crate::{backend::BackendDevice, shape::Shape, DType, DeviceError};
+use crate::{backend::BackendDevice, error::DeviceError, shape::Shape, DType};
 
 use super::CpuStorage;
 

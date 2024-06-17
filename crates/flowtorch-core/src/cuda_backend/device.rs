@@ -5,11 +5,11 @@ use cudarc::driver::{CudaSlice, LaunchAsync, LaunchConfig};
 use flowcuda_kernels::FILL;
 
 use crate::{
-    backend::BackendDevice, cpu_backend::CpuStorage, dtype::WithDType, DType, DeviceError,
-    DeviceErrorKind, Shape,
+    backend::BackendDevice, cpu_backend::CpuStorage, dtype::WithDType, error::DeviceError, DType,
+    Shape,
 };
 
-use super::{storage::CudaStorageSlice, CudaStorage};
+use super::{storage::CudaStorageSlice, CudaDeviceError, CudaStorage};
 
 #[derive(Debug, Clone)]
 pub struct CudaDevice {
@@ -21,10 +21,7 @@ macro_rules! allocate_and_fill {
     ($self:expr, $dtype:ty, $DType: ident, $fill_val:expr, $num_elements:expr, $func:expr) => {{
         let data = unsafe { $self.device.alloc::<$dtype>($num_elements) };
         if let Err(e) = data {
-            return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
-                "{}",
-                e
-            )))));
+            return Err(CudaDeviceError::AllocFail(Some(format!("{}", e))).into());
         }
         let data = data.unwrap();
         let launch_config = LaunchConfig::for_num_elems($num_elements as u32);
@@ -34,12 +31,7 @@ macro_rules! allocate_and_fill {
                 device: $self.clone(),
                 slice: CudaStorageSlice::$DType(data),
             }),
-            Err(e) => {
-                return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
-                    "{}",
-                    e
-                )))))
-            }
+            Err(e) => return Err(CudaDeviceError::AllocFail(Some(format!("{}", e))).into()),
         }
     }};
 }
@@ -55,13 +47,11 @@ impl CudaDevice {
             let static_module_name = Box::leak(module_name.to_string().into_boxed_str());
             if let Err(e) = dev.load_ptx(ptx.into(), module_name, &[static_module_name]) {
                 let e_str = format!("{}", e);
-                return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(e_str))));
+                return Err(CudaDeviceError::AllocFail(Some(e_str)).into());
             }
         }
         dev.get_func(module_name, module_name)
-            .ok_or(DeviceError::new(DeviceErrorKind::MissingKernel(
-                module_name.to_string(),
-            )))
+            .ok_or(CudaDeviceError::MissingKernel(module_name.to_string()).into())
     }
 
     pub fn alloc<T: WithDType + cudarc::driver::DeviceRepr>(
@@ -70,10 +60,7 @@ impl CudaDevice {
     ) -> Result<CudaSlice<T>, DeviceError> {
         let data = unsafe { self.device.alloc::<T>(numel) };
         if let Err(e) = data {
-            return Err(DeviceError::new(DeviceErrorKind::AllocFail(Some(format!(
-                "{}",
-                e
-            )))));
+            return Err(CudaDeviceError::AllocFail(Some(format!("{}", e))).into());
         }
         Ok(data.unwrap())
     }
@@ -105,7 +92,7 @@ impl BackendDevice for CudaDevice {
         if let Ok(d) = dev {
             Ok(Self { ordinal, device: d })
         } else {
-            Err(DeviceError::new(crate::DeviceErrorKind::InitFail))
+            Err(DeviceError::InitFail)
         }
     }
 
@@ -142,7 +129,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::U8(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
             CpuStorage::U32(data) => {
@@ -150,7 +137,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::U32(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
             CpuStorage::I32(data) => {
@@ -158,7 +145,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::I32(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
             CpuStorage::I64(data) => {
@@ -166,7 +153,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::I64(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
             CpuStorage::F32(data) => {
@@ -174,7 +161,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::F32(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
             CpuStorage::F64(data) => {
@@ -182,7 +169,7 @@ impl BackendDevice for CudaDevice {
                 if let Ok(s) = slice {
                     CudaStorageSlice::F64(s)
                 } else {
-                    return Err(DeviceError::new(DeviceErrorKind::CopyFail));
+                    return Err(DeviceError::CopyFail);
                 }
             }
         };

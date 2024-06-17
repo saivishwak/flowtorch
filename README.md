@@ -32,8 +32,8 @@ Right now the library is still in research phase where I am taking time to under
 - [x] Add Basic CUDA Device support
 - [x] Add Basic CUDA Ops
 - [x] Add to_device method support for converting the device of Tensor
-- [ ] The Array trait implementation right now is doing many recurssive operations, can we minimize it?
-- [ ] Refactor Error::Unknown and fix todo
+- [x] Refactor Error::Unknown and fix todo
+- [x] The Array trait implementation right now is doing many recurssive operations, can we minimize it?
 - [ ] Add to_dtype method to convert the data type
 - [ ] Fix Comp Op
 - [ ] Improve Code Coverage

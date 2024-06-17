@@ -2,9 +2,8 @@ use std::fmt::Display;
 
 use crate::array::Array;
 use crate::backend::BackendDevice;
+use crate::error::DeviceError;
 use crate::{cpu_backend::CpuDevice, dtype::WithDType, shape::Shape, storage::Storage, DType};
-use crate::{DeviceError, Error};
-
 pub enum DeviceT {
     Cpu,
     Cuda(usize),
@@ -17,15 +16,12 @@ pub enum Device {
 }
 
 impl Device {
-    pub fn new(device: DeviceT) -> Result<Self, Error> {
+    pub fn new(device: DeviceT) -> Result<Self, DeviceError> {
         match device {
             DeviceT::Cpu => Ok(Self::Cpu),
             DeviceT::Cuda(ordinal) => {
-                let dev = crate::cuda::CudaDevice::new(ordinal);
-                match dev {
-                    Ok(device) => Ok(Self::Cuda(device)),
-                    Err(_e) => Err(Error::Unknown),
-                }
+                let dev = crate::cuda::CudaDevice::new(ordinal)?;
+                Ok(Self::Cuda(dev))
             }
         }
     }
@@ -85,7 +81,7 @@ impl Device {
                 let storage = array.to_cpu_storage();
                 match storage {
                     Ok(s) => Ok(Storage::Cpu(s)),
-                    Err(_) => Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure)),
+                    Err(_) => Err(DeviceError::FromArrayFailure),
                 }
             }
             Device::Cuda(device) => {
@@ -95,7 +91,7 @@ impl Device {
                         let cuda_storage = device.storage_from_cpu_storage(&s)?;
                         Ok(Storage::Cuda(cuda_storage))
                     }
-                    Err(_) => Err(DeviceError::new(crate::DeviceErrorKind::FromArrayFailure)),
+                    Err(_) => Err(DeviceError::FromArrayFailure),
                 }
             }
         }

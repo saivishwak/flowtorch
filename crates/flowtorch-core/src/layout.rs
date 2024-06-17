@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use crate::{shape::Shape, Error, ShapeError};
+use crate::{
+    error::{Error, LayoutError},
+    shape::Shape,
+};
 
 pub type Stride = Vec<usize>;
 
@@ -51,16 +54,16 @@ impl Layout {
         self.shape.is_contiguous(&self.stride)
     }
 
-    pub fn broadcast_as(&self, shape: Shape) -> Result<Self, Error> {
+    pub fn broadcast_as(&self, _shape: Shape) -> Result<Self, Error> {
         todo!()
     }
 
     pub fn narrow(&self, dim: usize, start: usize, len: usize) -> Result<Self, Error> {
         let dims = self.shape.dims();
         if dim >= dims.len() {
-            return Err(Error::Shape(ShapeError::Narrow(String::from(
-                "Dim not in current Dimenesions.",
-            ))));
+            return Err(
+                LayoutError::Narrow(String::from("Dim not in current Dimenesions.")).into(),
+            );
         }
         let mut dims = dims.to_vec();
         dims[dim] = len;

@@ -1,4 +1,4 @@
-use crate::{dtype::WithDType, Error, Tensor};
+use crate::{dtype::WithDType, error::Error, Tensor};
 
 pub enum TensorScalar {
     Tensor(Tensor),

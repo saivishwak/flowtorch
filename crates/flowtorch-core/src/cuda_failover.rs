@@ -1,10 +1,11 @@
 #![allow(dead_code, unused_variables)]
-// This file is used as a placeholder non cuda compilation of the project
+// This file is used as a placeholder non cuda compilation of the project for non CUDA
 use crate::backend::{BackendDevice, BackendStorage};
 use crate::dtype::DType;
+use crate::error::StorageError;
 use crate::ops::BinaryOpT;
 use crate::ops::UnaryOpT;
-use crate::Error;
+use thiserror::Error;
 
 macro_rules! fail {
     () => {
@@ -16,7 +17,7 @@ macro_rules! fail {
 pub struct CudaDevice {}
 
 impl CudaDevice {
-    pub fn new(ordinal: usize) -> Result<Self, crate::DeviceError> {
+    pub fn new(ordinal: usize) -> Result<Self, crate::error::DeviceError> {
         fail!()
     }
 }
@@ -28,7 +29,7 @@ impl BackendDevice for CudaDevice {
         &self,
         shape: &crate::Shape,
         dtype: crate::DType,
-    ) -> Result<Self::Storage, crate::DeviceError> {
+    ) -> Result<Self::Storage, crate::error::DeviceError> {
         fail!()
     }
 
@@ -36,7 +37,7 @@ impl BackendDevice for CudaDevice {
         &self,
         shape: &crate::Shape,
         dtype: crate::DType,
-    ) -> Result<Self::Storage, crate::DeviceError> {
+    ) -> Result<Self::Storage, crate::error::DeviceError> {
         fail!()
     }
 
@@ -44,21 +45,21 @@ impl BackendDevice for CudaDevice {
         fail!()
     }
 
-    fn new(ordinal: usize) -> Result<Self, crate::DeviceError> {
+    fn new(ordinal: usize) -> Result<Self, crate::error::DeviceError> {
         fail!()
     }
 
     fn storage_from_slice<T: crate::dtype::WithDType>(
         &self,
         data: &[T],
-    ) -> Result<Self::Storage, crate::DeviceError> {
+    ) -> Result<Self::Storage, crate::error::DeviceError> {
         fail!()
     }
 
     fn storage_from_cpu_storage(
         &self,
         cpu_storage: &crate::cpu_backend::CpuStorage,
-    ) -> Result<Self::Storage, crate::DeviceError> {
+    ) -> Result<Self::Storage, crate::error::DeviceError> {
         fail!()
     }
 }
@@ -83,17 +84,45 @@ impl BackendStorage for CudaStorage {
         fail!()
     }
 
-    fn to_dtype(&self, layout: &crate::layout::Layout, dtype: DType) -> Result<Self, Error> {
+    fn to_dtype(&self, layout: &crate::layout::Layout, dtype: DType) -> Result<Self, StorageError> {
         fail!()
     }
 
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
         fail!()
     }
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
         fail!()
     }
     fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool {
         fail!()
     }
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum CudaStorageError {
+    #[error("Custom CpuStorageError {0}")]
+    Custom(String),
+    #[error("Data Type Mismatch")]
+    MismatchDtype,
+    #[error("DataType Mismatch in Contiguous Elements")]
+    ContiguousElementDtypeMismatch,
+    #[error("Empty Array")]
+    EmptyArray,
+    #[error("Error while Running Op: {0}")]
+    OpRunner(String),
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum CudaDeviceError {
+    #[error("Custom CUDA Device Error: {0}")]
+    Custom(String),
+    #[error("CUDA Driver Device Error")]
+    DriverDevice {},
+    #[error("Data Type Mismatch")]
+    MismatchDtype,
+    #[error("Missing Kernel")]
+    MissingKernel(String),
+    #[error("Alloc failed {0:?}")]
+    AllocFail(Option<String>),
 }

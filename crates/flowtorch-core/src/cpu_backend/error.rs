@@ -2,35 +2,15 @@ use std::fmt::Display;
 
 use thiserror::Error;
 
-#[derive(Error, Debug)]
-pub struct CpuStorageError {
-    kind: CpuStorageErrorKind,
-}
-
-impl CpuStorageError {
-    pub fn new(kind: CpuStorageErrorKind) -> Self {
-        Self { kind }
-    }
-
-    pub fn as_str(&self) -> String {
-        self.kind.as_string()
-    }
-}
-
-impl Display for CpuStorageError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.kind.as_string())
-    }
-}
-
-#[derive(Debug)]
-pub enum CpuStorageErrorKind {
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum CpuStorageError {
     Custom(String),
     MismatchDtype,
     ContiguousElementDtypeMismatch,
+    EmptyArray,
 }
 
-impl CpuStorageErrorKind {
+impl CpuStorageError {
     pub fn as_string(&self) -> String {
         match self {
             Self::Custom(msg) => format!("Custom CpuStorageError {}", msg.clone()),
@@ -38,6 +18,34 @@ impl CpuStorageErrorKind {
             Self::ContiguousElementDtypeMismatch => {
                 "Some of the elements have different DType".to_string()
             }
+            Self::EmptyArray => "Array should not be empty".to_string(),
         }
+    }
+}
+
+impl Display for CpuStorageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_string())
+    }
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum CpuDeviceError {
+    Custom(String),
+    MismatchDtype,
+}
+
+impl CpuDeviceError {
+    pub fn as_string(&self) -> String {
+        match self {
+            Self::Custom(msg) => format!("Custom CpuStorageError {}", msg),
+            Self::MismatchDtype => String::from("Mismatch Data Type"),
+        }
+    }
+}
+
+impl Display for CpuDeviceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_string())
     }
 }

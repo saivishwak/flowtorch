@@ -1,22 +1,13 @@
-#![allow(unused_imports)]
-
 use std::usize;
 
 pub use cudarc;
-use cudarc::driver::{CudaFunction, DeviceSlice, LaunchConfig};
-use cudarc::driver::{CudaSlice, LaunchAsync};
-use cudarc::nvrtc::Ptx;
-use flowcuda_kernels as kernels;
+use cudarc::driver::CudaSlice;
 
-use crate::dtype::WithDType;
+use crate::error::StorageError;
 use crate::ops::UnaryOpT;
-use crate::{
-    backend::BackendStorage, cpu_backend::CpuStorage, ops::BinaryOpT, CudaDevice, DType, Error,
-};
-use crate::{DeviceError, DeviceErrorKind};
+use crate::{backend::BackendStorage, cpu_backend::CpuStorage, ops::BinaryOpT, CudaDevice, DType};
 
 use super::ops::{Pair1Runner, Pair2Runner};
-use super::utils;
 
 #[derive(Debug)]
 pub enum CudaStorageSlice {
@@ -91,11 +82,15 @@ impl BackendStorage for CudaStorage {
         &self.device
     }
 
-    fn to_dtype(&self, layout: &crate::layout::Layout, dtype: DType) -> Result<Self, Error> {
+    fn to_dtype(
+        &self,
+        _layout: &crate::layout::Layout,
+        _dtype: DType,
+    ) -> Result<Self, StorageError> {
         todo!()
     }
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, Error> {
+    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
         let slice = U::V.run_op(self.device().clone(), self)?;
         Ok(Self {
             device: self.device().clone(),
@@ -103,7 +98,7 @@ impl BackendStorage for CudaStorage {
         })
     }
 
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, Error> {
+    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
         let slice = B::V.run_op(self.device().clone(), self, rhs)?;
         Ok(Self {
             device: self.device().clone(),

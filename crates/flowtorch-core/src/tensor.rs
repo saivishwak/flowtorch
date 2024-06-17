@@ -5,12 +5,13 @@ use crate::{
     array::Array,
     backend::{BackendDevice, BackendStorage},
     dtype::WithDType,
+    error::{Error, LayoutError, OpError},
     layout::{Layout, Stride},
     ops::{CmpOp, Op},
     scalar::TensorOrScalar,
     shape::Shape,
     storage::Storage,
-    DType, Device, Error, ShapeError,
+    DType, Device,
 };
 
 #[derive(Debug)]
@@ -29,7 +30,7 @@ pub struct Tensor_ {
 /// # Examples
 ///
 /// ```rust
-/// use flowtorch_core::{DType, Device, Error, Tensor};
+/// use flowtorch_core::{DType, Device, error::Error, Tensor};
 ///
 /// fn main() -> Result<(), Error> {
 ///     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &Device::Cpu)?;
@@ -101,7 +102,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1.0f64, 2.0, 3.0], &Device::Cpu)?;
@@ -126,7 +127,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::zeros((2, 2), DType::F32, &Device::Cpu)?;
@@ -148,7 +149,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::ones((2, 2), DType::F32, &Device::Cpu)?;
@@ -171,7 +172,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::from_vec(vec![1, 2], (2, 1), &Device::Cpu)?;
@@ -224,7 +225,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::from_vec(vec![1, 2], (2, 1), &Device::Cpu)?.reshape((1, 2))?;
@@ -236,9 +237,7 @@ impl Tensor {
         let shape: Shape = shape.into();
         if shape.elem_count() != self.elem_count() {
             //Shape mismatch
-            return Err(Error::Shape(crate::ShapeError::ReshapeError(String::from(
-                "Mismatch in Elements",
-            ))));
+            return Err(LayoutError::ReshapeError(String::from("Mismatch in Elements")).into());
         }
         //Right now Reshape is only supported for contiguous Tensor.
         // The Arc<RwLock<Storage>> ensures that the clone does not create new data in heap
@@ -253,9 +252,10 @@ impl Tensor {
             };
             return Ok(Tensor(Arc::new(tensor_)));
         }
-        Err(Error::Shape(crate::ShapeError::ReshapeError(String::from(
+        Err(LayoutError::ReshapeError(String::from(
             "Tensor Layout not contiguous, As of now we only support contiguous memory layout",
-        ))))
+        ))
+        .into())
     }
 
     /// View is same as Reshape
@@ -272,7 +272,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[[1], [2]], &Device::Cpu)?.narrow(1, 0, 1)?;
@@ -285,15 +285,13 @@ impl Tensor {
         let dims = shape.dims();
 
         if start > dims[dim] {
-            return Err(Error::Shape(ShapeError::Narrow(String::from(
-                "Start > Dimension length",
-            ))));
+            return Err(LayoutError::Narrow(String::from("Start > Dimension length")).into());
         }
 
         if (start + len) > dims[dim] {
-            return Err(Error::Shape(ShapeError::Narrow(String::from(
-                "Start + Length > Dimension length",
-            ))));
+            return Err(
+                LayoutError::Narrow(String::from("Start + Length > Dimension length")).into(),
+            );
         }
 
         if start == 0 && dims[dim] == len {
@@ -317,7 +315,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[[1], [2]], &Device::Cpu)?.squeeze(1)?;
@@ -386,7 +384,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -422,7 +420,7 @@ impl Tensor {
         let storage = self
             .storage()
             .cmp(&rhs.storage(), &self.layout, &rhs.layout)?;
-        return Self::from_storage(storage, shape, Some(crate::ops::Op::Cmp(self.clone(), op)));
+        Self::from_storage(storage, shape, Some(crate::ops::Op::Cmp(self.clone(), op)))
     }
 
     /// Element-wise equality.
@@ -485,7 +483,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -502,7 +500,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -519,7 +517,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -536,7 +534,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -553,7 +551,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -580,7 +578,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -597,7 +595,7 @@ impl Tensor {
     /// # Examples
     ///
     /// ```rust
-    /// use flowtorch_core::{DType, Device, Error, Tensor};
+    /// use flowtorch_core::{DType, Device, error::Error, Tensor};
     ///
     /// fn main() -> Result<(), Error> {
     ///     let x = Tensor::new(&[1, 2], &Device::Cpu)?;
@@ -629,7 +627,7 @@ impl Tensor {
         let lhs = self.shape();
         let rhs = rhs.shape();
         if lhs != rhs {
-            Err(Error::ShapeMismatchBinaryOp(String::from(op)))
+            Err(OpError::Binary(String::from(op)).into())
         } else {
             Ok(lhs)
         }

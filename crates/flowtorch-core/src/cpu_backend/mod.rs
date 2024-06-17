@@ -5,4 +5,4 @@ mod utils;
 
 pub use device::CpuDevice;
 pub use error::*;
-pub use storage::CpuStorage;
+pub use storage::{CpuStorage, ScalarStorage};

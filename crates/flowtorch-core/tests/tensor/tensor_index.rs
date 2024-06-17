@@ -50,14 +50,11 @@ fn indexer() {
         .unwrap()
         .equal(&Tensor::new(1.0, device).unwrap()),);
     //Check Data type
-    assert_eq!(
-        Tensor::new(&[0.0f32, 1.0, 2.0], device)
-            .unwrap()
-            .i(1)
-            .unwrap()
-            .equal(&Tensor::new(1.0f64, device).unwrap()),
-        false
-    );
+    assert!(!Tensor::new(&[0.0f32, 1.0, 2.0], device)
+        .unwrap()
+        .i(1)
+        .unwrap()
+        .equal(&Tensor::new(1.0f64, device).unwrap()));
     assert!(
         Tensor::new(vec![vec![vec![&[0.0], &[1.0], &[2.0]]]], device)
             .unwrap()

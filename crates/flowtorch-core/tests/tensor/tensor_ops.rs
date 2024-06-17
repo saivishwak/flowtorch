@@ -6,12 +6,9 @@ fn comparison() {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)
         .unwrap()
         .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()));
-    assert_eq!(
-        Tensor::new(&[0.0, 2.0, 3.0], device)
-            .unwrap()
-            .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()),
-        false
-    );
+    assert!(!Tensor::new(&[0.0, 2.0, 3.0], device)
+        .unwrap()
+        .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()));
 }
 
 #[test]

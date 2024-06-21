@@ -20,54 +20,47 @@ fn ones(device: &Device, dtype: DType) -> Result<Tensor, ()> {
 }
 
 // TODO - Need to add to_vec method to be able to test the output
-#[test]
-fn test_zeros() {
-    let device = Device::Cpu;
-    let _ = zeros(&device, DType::F32);
+pub fn test_zeros(device: &Device) {
+    let _ = zeros(device, DType::F32);
 }
 
 // TODO - Need to add to_vec method to be able to test the output
-#[test]
-fn test_ones() {
-    let device = Device::Cpu;
-    let _ = ones(&device, DType::F32);
+pub fn test_ones(device: &Device) {
+    let _ = ones(device, DType::F32);
 }
 
-#[test]
-fn strides() -> Result<(), ()> {
-    let device = Device::Cpu;
+pub fn test_strides(device: &Device) -> Result<(), ()> {
     assert_eq!(
-        Tensor::ones((3, 3, 2), DType::F32, &device)
+        Tensor::ones((3, 3, 2), DType::F32, device)
             .unwrap()
             .stride(),
         &[6, 2, 1]
     );
 
     assert_eq!(
-        Tensor::ones((1, 2), DType::F32, &device).unwrap().stride(),
+        Tensor::ones((1, 2), DType::F32, device).unwrap().stride(),
         &[2, 1]
     );
 
     assert_eq!(
-        Tensor::ones((4,), DType::F32, &device).unwrap().stride(),
+        Tensor::ones((4,), DType::F32, device).unwrap().stride(),
         &[1]
     );
     let shape: &[usize] = &[4];
     assert_eq!(
-        Tensor::ones(shape, DType::F32, &device).unwrap().stride(),
+        Tensor::ones(shape, DType::F32, device).unwrap().stride(),
         &[1]
     );
     assert_eq!(
-        Tensor::ones(vec![4], DType::F32, &device).unwrap().stride(),
+        Tensor::ones(vec![4], DType::F32, device).unwrap().stride(),
         &[1]
     );
 
-    assert_eq!(Tensor::ones((), DType::F32, &device).unwrap().stride(), &[]);
-
-    assert_eq!(Tensor::new(1.0, &device).unwrap().stride(), &[]);
-    assert_eq!(Tensor::new(&[1.0], &device).unwrap().stride(), &[1]);
+    assert_eq!(Tensor::ones((), DType::F32, device).unwrap().stride(), &[]);
+    assert_eq!(Tensor::new(1.0, device).unwrap().stride(), &[]);
+    assert_eq!(Tensor::new(&[1.0], device).unwrap().stride(), &[1]);
     assert_eq!(
-        Tensor::new(&[[1.0, 2.0], [3.0, 4.0]], &device)
+        Tensor::new(&[[1.0, 2.0], [3.0, 4.0]], device)
             .unwrap()
             .stride(),
         &[2, 1]
@@ -76,28 +69,26 @@ fn strides() -> Result<(), ()> {
     Ok(())
 }
 
-#[test]
-fn shape() -> Result<(), ()> {
-    let device = Device::Cpu;
-    assert_eq!(Tensor::new(1.0, &device).unwrap().dims(), &[]);
-    assert_eq!(Tensor::new(&[1.0], &device).unwrap().dims(), &[1]);
+pub fn test_shape(device: &Device) -> Result<(), ()> {
+    assert_eq!(Tensor::new(1.0, device).unwrap().dims(), &[]);
+    assert_eq!(Tensor::new(&[1.0], device).unwrap().dims(), &[1]);
 
-    assert_eq!(Tensor::new(&[1.0, 2.0, 3.0], &device).unwrap().dims(), &[3]);
+    assert_eq!(Tensor::new(&[1.0, 2.0, 3.0], device).unwrap().dims(), &[3]);
 
     assert_eq!(
-        Tensor::new(&[[1.0], [3.0]], &device).unwrap().dims(),
+        Tensor::new(&[[1.0], [3.0]], device).unwrap().dims(),
         &[2, 1]
     );
 
     assert_eq!(
-        Tensor::new(&[[1.0, 2.0], [3.0, 4.0]], &device)
+        Tensor::new(&[[1.0, 2.0], [3.0, 4.0]], device)
             .unwrap()
             .dims(),
         &[2, 2]
     );
 
     assert_eq!(
-        Tensor::new(&[[[1.0], [2.0]], [[3.0], [4.0]]], &device)
+        Tensor::new(&[[[1.0], [2.0]], [[3.0], [4.0]]], device)
             .unwrap()
             .dims(),
         &[2, 2, 1]
@@ -106,7 +97,7 @@ fn shape() -> Result<(), ()> {
     assert_eq!(
         Tensor::new(
             &[[[1.0, 1.0], [2.0, 2.0]], [[3.0, 3.0], [4.0, 4.0]]],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -119,7 +110,7 @@ fn shape() -> Result<(), ()> {
                 [[[1.0], [1.0]], [[2.0], [2.0]]],
                 [[[3.0], [3.0]], [[4.0], [4.0]]]
             ],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -132,29 +123,29 @@ fn shape() -> Result<(), ()> {
                 [[[1.0, 1.0], [1.0, 1.0]], [[2.0, 2.0], [2.0, 2.0]]],
                 [[[3.0, 3.0], [3.0, 3.0]], [[4.0, 4.0], [4.0, 4.0]]]
             ],
-            &device
+            device
         )
         .unwrap()
         .dims(),
         &[2, 2, 2, 2]
     );
 
-    assert_eq!(Tensor::new(vec![1.0], &device).unwrap().dims(), &[1]);
+    assert_eq!(Tensor::new(vec![1.0], device).unwrap().dims(), &[1]);
 
     assert_eq!(
-        Tensor::new(vec![1.0, 2.0, 3.0], &device).unwrap().dims(),
+        Tensor::new(vec![1.0, 2.0, 3.0], device).unwrap().dims(),
         &[3]
     );
 
     assert_eq!(
-        Tensor::new(vec![vec![1.0], vec![3.0]], &device)
+        Tensor::new(vec![vec![1.0], vec![3.0]], device)
             .unwrap()
             .dims(),
         &[2, 1]
     );
 
     assert_eq!(
-        Tensor::new(vec![vec![1.0, 2.0], vec![3.0, 4.0]], &device)
+        Tensor::new(vec![vec![1.0, 2.0], vec![3.0, 4.0]], device)
             .unwrap()
             .dims(),
         &[2, 2]
@@ -163,7 +154,7 @@ fn shape() -> Result<(), ()> {
     assert_eq!(
         Tensor::new(
             vec![vec![vec![1.0], vec![2.0]], vec![vec![3.0], vec![4.0]]],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -176,7 +167,7 @@ fn shape() -> Result<(), ()> {
                 vec![vec![1.0, 1.0], vec![2.0, 2.0]],
                 vec![vec![3.0, 3.0], vec![4.0, 4.0]]
             ],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -189,7 +180,7 @@ fn shape() -> Result<(), ()> {
                 vec![vec![vec![1.0], vec![1.0]], vec![vec![2.0], vec![2.0]]],
                 vec![vec![vec![3.0], vec![3.0]], vec![vec![4.0], vec![4.0]]]
             ],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -208,7 +199,7 @@ fn shape() -> Result<(), ()> {
                     vec![vec![4.0, 4.0], vec![4.0, 4.0]]
                 ]
             ],
-            &device
+            device
         )
         .unwrap()
         .dims(),
@@ -218,30 +209,27 @@ fn shape() -> Result<(), ()> {
     Ok(())
 }
 
-#[test]
-fn dtype() -> Result<(), ()> {
-    let device = Device::Cpu;
+pub fn test_dtype(device: &Device) -> Result<(), ()> {
+    assert_eq!(ones(device, DType::F32)?.dtype(), DType::F32);
+    assert_eq!(ones(device, DType::F64)?.dtype(), DType::F64);
+    assert_eq!(ones(device, DType::I32)?.dtype(), DType::I32);
+    assert_eq!(ones(device, DType::I64)?.dtype(), DType::I64);
+    assert_eq!(ones(device, DType::U8)?.dtype(), DType::U8);
+    assert_eq!(ones(device, DType::U32)?.dtype(), DType::U32);
 
-    assert_eq!(ones(&device, DType::F32)?.dtype(), DType::F32);
-    assert_eq!(ones(&device, DType::F64)?.dtype(), DType::F64);
-    assert_eq!(ones(&device, DType::I32)?.dtype(), DType::I32);
-    assert_eq!(ones(&device, DType::I64)?.dtype(), DType::I64);
-    assert_eq!(ones(&device, DType::U8)?.dtype(), DType::U8);
-    assert_eq!(ones(&device, DType::U32)?.dtype(), DType::U32);
+    assert_eq!(zeros(device, DType::F32)?.dtype(), DType::F32);
+    assert_eq!(zeros(device, DType::F64)?.dtype(), DType::F64);
+    assert_eq!(zeros(device, DType::I32)?.dtype(), DType::I32);
+    assert_eq!(zeros(device, DType::I64)?.dtype(), DType::I64);
+    assert_eq!(zeros(device, DType::U8)?.dtype(), DType::U8);
+    assert_eq!(zeros(device, DType::U32)?.dtype(), DType::U32);
 
-    assert_eq!(zeros(&device, DType::F32)?.dtype(), DType::F32);
-    assert_eq!(zeros(&device, DType::F64)?.dtype(), DType::F64);
-    assert_eq!(zeros(&device, DType::I32)?.dtype(), DType::I32);
-    assert_eq!(zeros(&device, DType::I64)?.dtype(), DType::I64);
-    assert_eq!(zeros(&device, DType::U8)?.dtype(), DType::U8);
-    assert_eq!(zeros(&device, DType::U32)?.dtype(), DType::U32);
-
-    assert_eq!(Tensor::new(1.0, &device).unwrap().dtype(), DType::F64);
-    assert_eq!(Tensor::new(&[1.0], &device).unwrap().dtype(), DType::F64);
-    assert_eq!(Tensor::new(&[1.0f32], &device).unwrap().dtype(), DType::F32);
-    assert_eq!(Tensor::new(&[1], &device).unwrap().dtype(), DType::I32);
-    assert_eq!(Tensor::new(&[1i64], &device).unwrap().dtype(), DType::I64);
-    assert_eq!(Tensor::new(&[1u8], &device).unwrap().dtype(), DType::U8);
-    assert_eq!(Tensor::new(&[1u32], &device).unwrap().dtype(), DType::U32);
+    assert_eq!(Tensor::new(1.0, device).unwrap().dtype(), DType::F64);
+    assert_eq!(Tensor::new(&[1.0], device).unwrap().dtype(), DType::F64);
+    assert_eq!(Tensor::new(&[1.0f32], device).unwrap().dtype(), DType::F32);
+    assert_eq!(Tensor::new(&[1], device).unwrap().dtype(), DType::I32);
+    assert_eq!(Tensor::new(&[1i64], device).unwrap().dtype(), DType::I64);
+    assert_eq!(Tensor::new(&[1u8], device).unwrap().dtype(), DType::U8);
+    assert_eq!(Tensor::new(&[1u32], device).unwrap().dtype(), DType::U32);
     Ok(())
 }

@@ -1,7 +1,8 @@
 use std::usize;
 
 pub use cudarc;
-use cudarc::driver::CudaSlice;
+use cudarc::driver::{CudaSlice, DeviceSlice, LaunchAsync, LaunchConfig};
+use flowcuda_kernels::CAST;
 
 use crate::error::StorageError;
 use crate::ops::UnaryOpT;
@@ -85,9 +86,42 @@ impl BackendStorage for CudaStorage {
     fn to_dtype(
         &self,
         _layout: &crate::layout::Layout,
-        _dtype: DType,
+        dtype: DType,
     ) -> Result<Self, StorageError> {
-        todo!()
+        if self.dtype() == dtype {
+            // return Ok(self.clone());
+        }
+        let slice = &self.slice;
+        match (slice, dtype) {
+            (CudaStorageSlice::F64(slice), DType::F32) => {
+                let data = self.device.alloc::<f32>(slice.len());
+                match data {
+                    Ok(data) => {
+                        let func = self
+                            .device
+                            .get_and_load_kernal_func("cast_f64_f32", CAST)
+                            .unwrap();
+                        let launch_config = LaunchConfig::for_num_elems(slice.len() as u32);
+                        let params = (&data, slice.len());
+                        match unsafe { func.launch(launch_config, params) } {
+                            Ok(_) => {
+                                return Ok(CudaStorage::new(
+                                    self.device().clone(),
+                                    CudaStorageSlice::F32(data),
+                                ))
+                            }
+                            Err(_) => return Err(StorageError::Unknown),
+                        }
+                    }
+                    Err(_e) => {
+                        return Err(StorageError::Unknown);
+                    }
+                }
+            }
+            _ => {
+                todo!()
+            }
+        }
     }
 
     fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {

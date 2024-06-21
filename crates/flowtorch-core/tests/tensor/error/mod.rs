@@ -3,9 +3,13 @@ use flowtorch_core::{
     DType, Device, Tensor,
 };
 
-#[test]
-fn init_error() {
-    let device = &Device::Cpu;
+pub fn test_error(device: &Device) {
+    println!("Running Error Combined Tests");
+    init_error(device);
+    layout_error(device);
+}
+
+fn init_error(device: &Device) {
     let e = Tensor::from_vec(vec![0.0, 2.0, 3.0], (2, 2), device)
         .err()
         .unwrap();
@@ -18,9 +22,7 @@ fn init_error() {
     );
 }
 
-#[test]
-fn layout_error() {
-    let device = &Device::Cpu;
+fn layout_error(device: &Device) {
     let e = Tensor::from_vec(vec![0.0, 2.0, 3.0], 3, device)
         .unwrap()
         .reshape((3, 3))

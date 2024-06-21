@@ -72,7 +72,8 @@ impl CudaDevice {
     ) -> Result<CudaStorage, DeviceError> {
         let shape_vec: Vec<usize> = shape.into();
         let num_elements: usize = shape_vec.iter().product();
-        let func = self.get_and_load_kernal_func("fill_f32", FILL)?;
+        let func =
+            self.get_and_load_kernal_func(format!("fill_{}", T::dtype().as_str()).as_str(), FILL)?;
         match T::dtype() {
             DType::U8 => allocate_and_fill!(self, u8, U8, fill_val, num_elements, func),
             DType::U32 => allocate_and_fill!(self, u32, U32, fill_val, num_elements, func),

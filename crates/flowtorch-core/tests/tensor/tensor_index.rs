@@ -1,8 +1,6 @@
 use flowtorch_core::{Device, IndexOp, Tensor};
 
-#[test]
-fn narrow() {
-    let device = &Device::Cpu;
+pub fn test_narrow(device: &Device) {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)
         .unwrap()
         .narrow(0, 0, 2)
@@ -25,9 +23,7 @@ fn narrow() {
     // );
 }
 
-#[test]
-fn squeeze() {
-    let device = &Device::Cpu;
+pub fn squeeze(device: &Device) {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)
         .unwrap()
         .squeeze(0)
@@ -41,9 +37,7 @@ fn squeeze() {
         .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()));
 }
 
-#[test]
-fn indexer() {
-    let device = &Device::Cpu;
+pub fn test_indexer(device: &Device) {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)
         .unwrap()
         .i(1)

@@ -1,8 +1,6 @@
 use flowtorch_core::{Device, Tensor};
 
-#[test]
-fn comparison() {
-    let device = &Device::Cpu;
+pub fn test_comparison(device: &Device) {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)
         .unwrap()
         .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()));
@@ -11,9 +9,7 @@ fn comparison() {
         .equal(&Tensor::new(&[0.0, 1.0, 2.0], device).unwrap()));
 }
 
-#[test]
-fn add() {
-    let device = &Device::Cpu;
+pub fn test_add(device: &Device) {
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], device).unwrap();
     let z = Tensor::add_impl(&x, &y).unwrap();
@@ -32,9 +28,7 @@ fn add() {
     assert!(Tensor::new(&[3, 4, 6], device).unwrap().equal(&z));
 }
 
-#[test]
-fn sub() {
-    let device = &Device::Cpu;
+pub fn test_sub(device: &Device) {
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], device).unwrap();
     let z = Tensor::sub_impl(&y, &x).unwrap();
@@ -44,9 +38,7 @@ fn sub() {
     assert!(Tensor::new(&[1.0f64, 0.0, 0.0], device).unwrap().equal(&z));
 }
 
-#[test]
-fn mul() {
-    let device = &Device::Cpu;
+pub fn test_mul(device: &Device) {
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], device).unwrap();
     let z = Tensor::mul_impl(&x, &y).unwrap();
@@ -56,9 +48,7 @@ fn mul() {
     assert!(Tensor::new(&[2.0f64, 4.0, 9.0], device).unwrap().equal(&z));
 }
 
-#[test]
-fn max_min() {
-    let device = &Device::Cpu;
+pub fn test_max_min(device: &Device) {
     let x = Tensor::new(&[1.0f64, 3.0, 3.0], device).unwrap();
     let y = Tensor::new(&[2.0f64, 2.0, 3.0], device).unwrap();
     let z = Tensor::max(&x, &y).unwrap();
@@ -68,9 +58,7 @@ fn max_min() {
     assert!(Tensor::new(&[1.0f64, 2.0, 3.0], device).unwrap().equal(&z));
 }
 
-#[test]
-fn unary() {
-    let device = &Device::Cpu;
+pub fn test_unary(device: &Device) {
     let x = Tensor::new(&[1.0f64, 2.0, 3.0], device).unwrap();
     let y = Tensor::neg(&x).unwrap();
     assert!(Tensor::new(&[-1.0f64, -2.0, -3.0], device)

@@ -51,7 +51,7 @@ impl<B: BinaryOpT> Pair2Runner for B {
             Err(e) => return Err(CudaStorageError::DeviceError { source: e }.into()),
         };
         let data = device.alloc::<T>(numel).unwrap();
-        let launch_config = LaunchConfig::for_num_elems(numel as u32);
+        let launch_config: LaunchConfig = LaunchConfig::for_num_elems(numel as u32);
         let params = (numel, lhs, rhs, &data);
         match unsafe { func.launch(launch_config, params) } {
             Ok(_) => Ok(data),

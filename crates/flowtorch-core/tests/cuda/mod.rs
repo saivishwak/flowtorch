@@ -1,2 +1,1 @@
-mod tensor_basic;
-mod tensor_ops;
+// Tests which are specific to CUDA wil go here

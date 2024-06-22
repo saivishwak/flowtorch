@@ -34,9 +34,6 @@ impl Formatter {
         let stride = layout.stride();
         let start_offset = layout.start_offset();
 
-        if !self.tensor.is_layout_contiguous() {
-            return Err(String::from("Non Contiguous layout not supported!"));
-        }
         let formatted_string = match cpu_storage {
             crate::cpu_backend::CpuStorage::U8(data) => {
                 self.fmt_tensor_as_string(&data, dims, &stride, start_offset)

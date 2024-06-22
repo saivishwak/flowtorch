@@ -98,6 +98,7 @@ impl BackendStorage for CudaStorage {
         &self.device
     }
 
+    // TODO: REFACTOR
     fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, StorageError> {
         let slice = &self.slice;
         let len: usize = layout.shape().num_elements();
@@ -106,14 +107,28 @@ impl BackendStorage for CudaStorage {
             format!("cast_{}_{}", self.dtype().as_str(), dtype.as_str()).as_str(),
             CAST,
         )?;
+        let num_dims = layout.shape().dims().len();
+        let layout_data = &self
+            .device
+            .device
+            .htod_copy([layout.shape().dims(), layout.stride().as_slice()].concat())
+            .unwrap(); //It is okay to panic here if we are not able to alloc data
+        let layout_is_contiguous = layout.is_contiguous();
         match dtype {
             DType::F32 => {
                 let out = self.device.alloc::<f32>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<f32>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<f32>)>(
+                    .launch_function::<(usize, u64, &CudaSlice<f32>, bool, &CudaSlice<usize>, usize)>(
                         func,
                         launch_config,
                         params,
@@ -126,10 +141,17 @@ impl BackendStorage for CudaStorage {
             DType::F64 => {
                 let out = self.device.alloc::<f64>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<f64>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<f64>)>(
+                    .launch_function::<(usize, u64, &CudaSlice<f64>, bool, &CudaSlice<usize>, usize)>(
                         func,
                         launch_config,
                         params,
@@ -142,10 +164,17 @@ impl BackendStorage for CudaStorage {
             DType::I64 => {
                 let out = self.device.alloc::<i64>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<i64>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<i64>)>(
+                    .launch_function::<(usize, u64, &CudaSlice<i64>, bool, &CudaSlice<usize>, usize)>(
                         func,
                         launch_config,
                         params,
@@ -158,10 +187,17 @@ impl BackendStorage for CudaStorage {
             DType::I32 => {
                 let out = self.device.alloc::<i32>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<i32>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<i32>)>(
+                    .launch_function::<(usize, u64, &CudaSlice<i32>, bool, &CudaSlice<usize>, usize)>(
                         func,
                         launch_config,
                         params,
@@ -174,10 +210,17 @@ impl BackendStorage for CudaStorage {
             DType::U32 => {
                 let out = self.device.alloc::<u32>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<u32>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<u32>)>(
+                    .launch_function::<(usize, u64, &CudaSlice<u32>, bool, &CudaSlice<usize>, usize)>(
                         func,
                         launch_config,
                         params,
@@ -190,10 +233,17 @@ impl BackendStorage for CudaStorage {
             DType::U8 => {
                 let out = self.device.alloc::<u8>(len)?;
                 let launch_config = LaunchConfig::for_num_elems(len as u32);
-                let params: (usize, u64, &CudaSlice<u8>) = (len, slice_ptr, &out);
+                let params = (
+                    len,
+                    slice_ptr,
+                    &out,
+                    layout_is_contiguous,
+                    layout_data,
+                    num_dims,
+                );
                 let _ = self
                     .device
-                    .launch_function::<(usize, u64, &CudaSlice<u8>)>(func, launch_config, params)?;
+                    .launch_function::<(usize, u64, &CudaSlice<u8>, bool, &CudaSlice<usize>, usize)>(func, launch_config, params)?;
                 return Ok(CudaStorage::new(
                     self.device().clone(),
                     CudaStorageSlice::U8(out),
@@ -202,25 +252,30 @@ impl BackendStorage for CudaStorage {
         }
     }
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
-        let slice = U::V.run_op(self.device().clone(), self)?;
+    fn unary_impl<U: UnaryOpT>(&self, layout: &Layout) -> Result<Self, StorageError> {
+        let slice = U::V.run_op(self.device().clone(), self, layout)?;
         Ok(Self {
             device: self.device().clone(),
             slice,
         })
     }
 
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
-        let slice = B::V.run_op(self.device().clone(), self, rhs)?;
+    fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, StorageError> {
+        let slice = B::V.run_op(self.device().clone(), self, rhs, lhs_layout, rhs_layout)?;
         Ok(Self {
             device: self.device().clone(),
             slice,
         })
     }
 
-    fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool {
+    fn equal(&self, rhs: &Self, self_layout: &Layout, other_layout: &Layout) -> bool {
         let lhs_cpu_storage = self.get_cpu_storage();
         let rhs_cpu_storage = rhs.get_cpu_storage();
-        lhs_cpu_storage.equal(&rhs_cpu_storage, self_offset, other_offset)
+        lhs_cpu_storage.equal(&rhs_cpu_storage, self_layout, other_layout)
     }
 }

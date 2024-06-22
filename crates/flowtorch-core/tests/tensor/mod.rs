@@ -36,6 +36,7 @@ pub fn test_tensor(device: &Device) {
     tensor_ops::test_mul(device);
     tensor_ops::test_sub(device);
     tensor_ops::test_unary(device);
+    tensor_ops::test_narrow(device);
 
     //Test Errors
     error::test_error(device);

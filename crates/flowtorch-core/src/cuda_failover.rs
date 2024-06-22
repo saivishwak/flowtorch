@@ -5,6 +5,7 @@ use crate::dtype::DType;
 use crate::error::StorageError;
 use crate::ops::BinaryOpT;
 use crate::ops::UnaryOpT;
+use crate::Layout;
 use thiserror::Error;
 
 macro_rules! fail {
@@ -88,13 +89,18 @@ impl BackendStorage for CudaStorage {
         fail!()
     }
 
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
+    fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, StorageError> {
         fail!()
     }
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
+    fn unary_impl<U: UnaryOpT>(&self, layout: &Layout) -> Result<Self, StorageError> {
         fail!()
     }
-    fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool {
+    fn equal(&self, rhs: &Self, self_layout: &Layout, other_layout: &Layout) -> bool {
         fail!()
     }
 }

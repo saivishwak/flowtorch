@@ -63,28 +63,33 @@ impl Storage {
         }
     }
 
-    pub(crate) fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
+    pub(crate) fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, StorageError> {
         match (self, rhs) {
             (Self::Cpu(lhs), Self::Cpu(rhs)) => {
-                let storage = lhs.binary_impl::<B>(rhs)?;
+                let storage = lhs.binary_impl::<B>(rhs, lhs_layout, rhs_layout)?;
                 Ok(Storage::Cpu(storage))
             }
             (Storage::Cuda(lhs), Storage::Cuda(rhs)) => {
-                let storage = lhs.binary_impl::<B>(rhs)?;
+                let storage = lhs.binary_impl::<B>(rhs, lhs_layout, rhs_layout)?;
                 Ok(Storage::Cuda(storage))
             }
             _ => Err(StorageError::DeviceMismatch),
         }
     }
 
-    pub(crate) fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
+    pub(crate) fn unary_impl<U: UnaryOpT>(&self, layout: &Layout) -> Result<Self, StorageError> {
         match self {
             Self::Cpu(lhs) => {
-                let storage = lhs.unary_impl::<U>()?;
+                let storage = lhs.unary_impl::<U>(layout)?;
                 Ok(Storage::Cpu(storage))
             }
             Self::Cuda(lhs) => {
-                let storage = lhs.unary_impl::<U>()?;
+                let storage = lhs.unary_impl::<U>(layout)?;
                 Ok(Storage::Cuda(storage))
             }
         }
@@ -99,15 +104,10 @@ impl Storage {
         todo!()
     }
 
-    pub(crate) fn equal(
-        &self,
-        other: &Self,
-        self_offset: (usize, usize),
-        other_offset: (usize, usize),
-    ) -> bool {
+    pub(crate) fn equal(&self, other: &Self, self_layout: &Layout, other_layout: &Layout) -> bool {
         match (self, other) {
-            (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_offset, other_offset),
-            (Storage::Cuda(lhs), Storage::Cuda(rhs)) => lhs.equal(rhs, self_offset, other_offset),
+            (Self::Cpu(lhs), Self::Cpu(rhs)) => lhs.equal(rhs, self_layout, other_layout),
+            (Storage::Cuda(lhs), Storage::Cuda(rhs)) => lhs.equal(rhs, self_layout, other_layout),
             _ => false,
         }
     }

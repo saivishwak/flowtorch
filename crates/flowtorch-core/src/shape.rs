@@ -1,7 +1,15 @@
+use std::fmt::Display;
+
 use crate::layout::Stride;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Shape(Vec<usize>);
+
+impl Display for Shape {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Shape {:?}", self.0)
+    }
+}
 
 impl Shape {
     // Method to create a new Shape

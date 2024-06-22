@@ -36,12 +36,16 @@ Right now the library is still in research phase where I am taking time to under
 - [x] The Array trait implementation right now is doing many recurssive operations, can we minimize it?
 - [x] Combine common tests for different devices
 - [x] Add to_dtype method to convert the data type
-- [ ] Support Fotran Memory layout (colum Major)
+- [x] Add strided index in CPU and CUDA
+- [x] Ops to use strided index for CPU and CUDA
+- [ ] Fix Comp Op and Broadcasting
+- [ ] Impl flatten https://pytorch.org/docs/stable/generated/torch.flatten.html (this should when used to_vec1 give 1D array of strided indexed elements)
+- [ ] Formatter to use strided index / flatten
 - [ ] Add Basic Back Prop
-- [ ] Fix Comp Op
 - [ ] Add in place Binary and Unary ops (ex, tensor.add_, tensor.abs_)
 - [ ] Improve Code Coverage
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
+- [ ] Support Fotran Memory layout (colum Major)
 - [ ] Fix select_index method
 - [ ] Add Benchmarking (https://github.com/bheisler/criterion.rs)
 - [ ] Study Torch7 Library and how Storage, Tensor is implemented

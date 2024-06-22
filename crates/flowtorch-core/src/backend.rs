@@ -33,7 +33,12 @@ pub trait BackendStorage: Sized + std::fmt::Debug {
 
     fn get_cpu_storage(&self) -> CpuStorage;
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError>;
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError>;
-    fn equal(&self, rhs: &Self, self_offset: (usize, usize), other_offset: (usize, usize)) -> bool;
+    fn unary_impl<U: UnaryOpT>(&self, layout: &Layout) -> Result<Self, StorageError>;
+    fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, StorageError>;
+    fn equal(&self, rhs: &Self, self_layout: &Layout, other_layout: &Layout) -> bool;
 }

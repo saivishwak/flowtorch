@@ -3,6 +3,7 @@
 use crate::{
     error::{Error, LayoutError},
     shape::Shape,
+    StridedIndex,
 };
 
 pub type Stride = Vec<usize>;
@@ -23,12 +24,24 @@ impl Layout {
         }
     }
 
+    pub fn dims_slice(&self) -> &[usize] {
+        &self.shape.dims()
+    }
+
     pub fn shape(&self) -> Shape {
         self.shape.clone()
     }
 
     pub fn stride(&self) -> Stride {
         self.stride.clone()
+    }
+
+    pub fn stride_slice(&self) -> &[usize] {
+        &self.stride
+    }
+
+    pub fn strided_index(&self) -> StridedIndex {
+        StridedIndex::from_layout(self)
     }
 
     pub fn start_offset(&self) -> usize {
@@ -68,9 +81,12 @@ impl Layout {
         let mut dims = dims.to_vec();
         dims[dim] = len;
 
+        let shape = Shape::from(dims);
+        let stride = self.stride().clone();
+
         Ok(Self {
-            shape: Shape::from(dims),
-            stride: self.stride.clone(),
+            shape,
+            stride,
             start_offset: self.start_offset + self.stride[dim] * start,
         })
     }

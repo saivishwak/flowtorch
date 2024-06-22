@@ -305,106 +305,113 @@ impl BackendStorage for CpuStorage {
         }
     }
 
-    fn unary_impl<U: UnaryOpT>(&self) -> Result<Self, StorageError> {
+    fn unary_impl<U: UnaryOpT>(&self, layout: &Layout) -> Result<Self, StorageError> {
+        let strided_index = layout.strided_index();
         match self {
             Self::F32(lhs) => {
-                let data = lhs.iter().map(|v| U::f32(*v)).collect();
+                let data = strided_index.map(|idx| U::f32(lhs[idx])).collect();
                 Ok(Self::F32(data))
             }
             Self::F64(lhs) => {
-                let data = lhs.iter().map(|v| U::f64(*v)).collect();
+                let data = strided_index.map(|idx| U::f64(lhs[idx])).collect();
                 Ok(Self::F64(data))
             }
             Self::U8(lhs) => {
-                let data = lhs.iter().map(|v| U::u8(*v)).collect();
+                let data = strided_index.map(|idx| U::u8(lhs[idx])).collect();
                 Ok(Self::U8(data))
             }
             Self::U32(lhs) => {
-                let data = lhs.iter().map(|v| U::u32(*v)).collect();
+                let data = strided_index.map(|idx| U::u32(lhs[idx])).collect();
                 Ok(Self::U32(data))
             }
             Self::I32(lhs) => {
-                let data = lhs.iter().map(|v| U::i32(*v)).collect();
+                let data = strided_index.map(|idx| U::i32(lhs[idx])).collect();
                 Ok(Self::I32(data))
             }
             Self::I64(lhs) => {
-                let data = lhs.iter().map(|v| U::i64(*v)).collect();
+                let data = strided_index.map(|idx| U::i64(lhs[idx])).collect();
                 Ok(Self::I64(data))
             }
         }
     }
-    fn equal(&self, rhs: &Self, lhs_offset: (usize, usize), rhs_offset: (usize, usize)) -> bool {
+    fn equal(&self, rhs: &Self, lhs_layout: &Layout, rhs_layout: &Layout) -> bool {
         match (self, rhs) {
             (Self::U8(lhs_data), Self::U8(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
             (Self::U32(lhs_data), Self::U32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
             (Self::I64(lhs_data), Self::I64(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
             (Self::I32(lhs_data), Self::I32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
             (Self::F32(lhs_data), Self::F32(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
             (Self::F64(lhs_data), Self::F64(rhs_data)) => {
-                compare_vecs(lhs_data, rhs_data, lhs_offset, rhs_offset)
+                compare_vecs(lhs_data, rhs_data, lhs_layout, rhs_layout)
             }
+            //Datatype mismatch
             _ => false,
         }
     }
 
     #[allow(unused_variables)]
-    fn binary_impl<B: BinaryOpT>(&self, rhs: &Self) -> Result<Self, StorageError> {
+    fn binary_impl<B: BinaryOpT>(
+        &self,
+        rhs: &Self,
+        lhs_layout: &Layout,
+        rhs_layout: &Layout,
+    ) -> Result<Self, StorageError> {
         match (self, rhs) {
             (Self::F32(lhs), Self::F32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::f32(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::f32(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::F32(data))
             }
             (Self::F64(lhs), Self::F64(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::f64(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::f64(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::F64(data))
             }
             (Self::U8(lhs), Self::U8(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::u8(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::u8(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::U8(data))
             }
             (Self::U32(lhs), Self::U32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::u32(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::u32(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::U32(data))
             }
             (Self::I32(lhs), Self::I32(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::i32(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::i32(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::I32(data))
             }
             (Self::I64(lhs), Self::I64(rhs)) => {
-                let data = lhs
-                    .iter()
-                    .zip(rhs.iter())
-                    .map(|(lhs, rhs)| B::i64(*lhs, *rhs))
+                let data = lhs_layout
+                    .strided_index()
+                    .zip(rhs_layout.strided_index())
+                    .map(|(li, ri)| B::i64(lhs[li], rhs[ri]))
                     .collect();
                 Ok(Self::I64(data))
             }

@@ -11,7 +11,7 @@ use crate::{
     scalar::TensorOrScalar,
     shape::Shape,
     storage::Storage,
-    DType, Device,
+    DType, Device, StridedIndex,
 };
 
 #[derive(Debug)]
@@ -54,9 +54,11 @@ macro_rules! binary_op {
     ($fn_name:ident, $op_name:ident) => {
         pub fn $fn_name(&self, rhs: &Self) -> Result<Self, Error> {
             let shape = self.shape().clone();
-            let storage = self
-                .storage()
-                .binary_impl::<crate::ops::$op_name>(&rhs.storage())?;
+            let storage = self.storage().binary_impl::<crate::ops::$op_name>(
+                &rhs.storage(),
+                self.layout(),
+                rhs.layout(),
+            )?;
             return Self::from_storage(
                 storage,
                 shape,
@@ -74,7 +76,9 @@ macro_rules! unary_op {
     ($fn_name:ident, $op_name:ident) => {
         pub fn $fn_name(&self) -> Result<Self, Error> {
             let shape = self.shape().clone();
-            let storage = self.storage().unary_impl::<crate::ops::$op_name>()?;
+            let storage = self
+                .storage()
+                .unary_impl::<crate::ops::$op_name>(self.layout())?;
             return Self::from_storage(
                 storage,
                 shape,
@@ -399,11 +403,11 @@ impl Tensor {
         }
         let self_storage = &*self.storage();
         let other_storage = &*other.storage();
-        let self_offset = (self.layout.start_offset(), self.elem_count());
-        let other_offset = (other.layout.start_offset(), other.elem_count());
+        let self_layout = self.layout();
+        let other_layout = other.layout();
 
         //Element wise comparision
-        self_storage.equal(other_storage, self_offset, other_offset)
+        self_storage.equal(other_storage, self_layout, other_layout)
     }
 
     //TODO - Need to be able to to scalar + tensor  as well, i.e self can be a tensor dereived from scalar
@@ -632,23 +636,11 @@ impl Tensor {
             Ok(lhs)
         }
     }
+
+    pub fn strided_index(&self) -> StridedIndex {
+        StridedIndex::from_layout(self.layout())
+    }
 }
-
-// impl PartialEq for Tensor {
-//     fn eq(&self, other: &Self) -> bool {
-//         todo!()
-//     }
-// }
-
-// impl PartialOrd for Tensor {
-//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-//         todo!()
-//     }
-
-//     fn ge(&self, other: &Self) -> bool {
-//         todo!()
-//     }
-// }
 
 // Macro for std binary ops
 macro_rules! std_binary_op {

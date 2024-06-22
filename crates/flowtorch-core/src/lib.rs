@@ -34,6 +34,7 @@ pub mod error;
 mod formatter;
 mod indexer;
 mod layout;
+pub use layout::Layout;
 mod ops;
 mod shape;
 mod storage;
@@ -46,6 +47,8 @@ pub use shape::Shape;
 pub use tensor::*;
 mod backend;
 mod scalar;
+mod strided_index;
+pub use strided_index::StridedIndex;
 
 #[cfg(feature = "cuda")]
 pub mod cuda_backend;

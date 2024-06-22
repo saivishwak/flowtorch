@@ -1,15 +1,28 @@
 #include <math.h>
+#include "utils.cuh"
 
-// TODO : Support column major format
-#define UNARY_OP(TYPENAME, FN_NAME, FUNC)                                                    \
-  extern "C" __global__ void FN_NAME(const size_t numel, const TYPENAME *lhs, TYPENAME *out) \
-  {                                                                                          \
-    for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel;                  \
-         i += blockDim.x * gridDim.x)                                                        \
-    {                                                                                        \
-      TYPENAME x = lhs[i];                                                                   \
-      out[i] = FUNC;                                                                         \
-    }                                                                                        \
+#define UNARY_OP(TYPENAME, FN_NAME, FUNC)                                                                                                         \
+  extern "C" __global__ void FN_NAME(const size_t numel, const TYPENAME *lhs, TYPENAME *out, bool is_contiguous, size_t *layout, size_t num_dims) \
+  {                                                                                                                                               \
+    if (is_contiguous)                                                                                                                            \
+    {                                                                                                                                             \
+      for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel; i += blockDim.x * gridDim.x)                                        \
+      {                                                                                                                                           \
+        TYPENAME x = lhs[i];                                                                                                                      \
+        out[i] = FUNC;                                                                                                                            \
+      }                                                                                                                                           \
+    }                                                                                                                                             \
+    else                                                                                                                                          \
+    {                                                                                                                                             \
+      size_t *dims = layout;                                                                                                                      \
+      size_t *stride = dims + num_dims;                                                                                                           \
+      for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel; i += blockDim.x * gridDim.x)                                        \
+      {                                                                                                                                           \
+        unsigned strided_i = get_strided_index(i, num_dims, dims, stride);                                                                        \
+        TYPENAME x = lhs[strided_i];                                                                                                              \
+        out[i] = FUNC;                                                                                                                            \
+      }                                                                                                                                           \
+    }                                                                                                                                             \
   }
 
 // Neg

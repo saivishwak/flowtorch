@@ -1,16 +1,25 @@
+use crate::{layout::Layout, StridedIndex};
+
+//TODO Need to implement Strided Indexing instead of plain vector index
 // Helper function to compare vectors of any type
 pub(super) fn compare_vecs<T: PartialEq>(
     vec1: &[T],
     vec2: &[T],
-    vec1_offset: (usize, usize),
-    vec2_offset: (usize, usize),
+    vec1_layout: &Layout,
+    vec2_layout: &Layout,
 ) -> bool {
-    let vec1_start = vec1_offset.0;
-    let vec1_end = vec1_start + vec1_offset.1;
-    let vec2_start = vec2_offset.0;
-    let vec2_end = vec2_start + vec2_offset.1;
-    if vec1_end - vec1_start != vec2_end - vec2_start {
-        return false;
-    }
-    vec1[vec1_start..vec1_end] == vec2[vec2_start..vec2_end]
+    let strided_index_v1 = StridedIndex::from_layout(vec1_layout);
+    let strided_index_v2 = StridedIndex::from_layout(vec2_layout);
+
+    // Use zip and all to iterate through elements and check condition
+    let result = strided_index_v1.zip(strided_index_v2).all(|(i1, i2)| {
+        // Ensure indices are within bounds
+        if i1 < vec1.len() && i2 < vec2.len() {
+            // Compare elements from vec1 and vec2
+            vec1[i1] == vec2[i2]
+        } else {
+            false
+        }
+    });
+    result
 }

@@ -21,16 +21,9 @@
       size_t *rhs_strides = rhs_dims + rhs_num_dims;                                                                                                                                                       \
       for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel; i += blockDim.x * gridDim.x)                                                                                                 \
       {                                                                                                                                                                                                    \
-        unsigned int tmp_i = i;                                                                                                                                                                            \
-        unsigned int rhs_i = 0;                                                                                                                                                                            \
-        for (int d = rhs_num_dims - 1; d >= 0; d--)                                                                                                                                                        \
-        {                                                                                                                                                                                                  \
-          unsigned int i_dim = tmp_i % rhs_dims[d];                                                                                                                                                        \
-          rhs_i += i_dim * rhs_strides[d];                                                                                                                                                                 \
-          tmp_i /= rhs_dims[d];                                                                                                                                                                            \
-        }                                                                                                                                                                                                  \
+        unsigned strided_i = get_strided_index(i, rhs_num_dims, rhs_dims, rhs_strides);                                                                                                                    \
         TYPENAME x = lhs[i];                                                                                                                                                                               \
-        TYPENAME y = rhs[rhs_i];                                                                                                                                                                           \
+        TYPENAME y = rhs[strided_i];                                                                                                                                                                       \
         out[i] = FUNC;                                                                                                                                                                                     \
       }                                                                                                                                                                                                    \
     }                                                                                                                                                                                                      \
@@ -40,15 +33,8 @@
       size_t *lhs_strides = lhs_dims + lhs_num_dims;                                                                                                                                                       \
       for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel; i += blockDim.x * gridDim.x)                                                                                                 \
       {                                                                                                                                                                                                    \
-        unsigned int tmp_i = i;                                                                                                                                                                            \
-        unsigned int lhs_i = 0;                                                                                                                                                                            \
-        for (int d = lhs_num_dims - 1; d >= 0; d--)                                                                                                                                                        \
-        {                                                                                                                                                                                                  \
-          unsigned int i_dim = tmp_i % lhs_dims[d];                                                                                                                                                        \
-          lhs_i += i_dim * lhs_strides[d];                                                                                                                                                                 \
-          tmp_i /= lhs_dims[d];                                                                                                                                                                            \
-        }                                                                                                                                                                                                  \
-        TYPENAME x = lhs[lhs_i];                                                                                                                                                                           \
+        unsigned strided_i = get_strided_index(i, lhs_num_dims, lhs_dims, lhs_strides);                                                                                                                    \
+        TYPENAME x = lhs[strided_i];                                                                                                                                                                       \
         TYPENAME y = rhs[i];                                                                                                                                                                               \
         out[i] = FUNC;                                                                                                                                                                                     \
       }                                                                                                                                                                                                    \

@@ -37,7 +37,7 @@ macro_rules! allocate_and_fill {
 }
 
 impl CudaDevice {
-    pub fn get_and_load_kernal_func(
+    pub(crate) fn get_and_load_kernal_func(
         &self,
         module_name: &str,
         ptx: &'static str,
@@ -54,7 +54,7 @@ impl CudaDevice {
             .ok_or(CudaDeviceError::MissingKernel(module_name.to_string()).into())
     }
 
-    pub fn alloc<T: WithDType + cudarc::driver::DeviceRepr>(
+    pub(crate) fn alloc<T: WithDType + cudarc::driver::DeviceRepr>(
         &self,
         numel: usize,
     ) -> Result<CudaSlice<T>, DeviceError> {
@@ -63,6 +63,25 @@ impl CudaDevice {
             return Err(CudaDeviceError::AllocFail(Some(format!("{}", e))).into());
         }
         Ok(data.unwrap())
+    }
+
+    pub(crate) fn launch_function<U>(
+        &self,
+        func: cudarc::driver::CudaFunction,
+        launch_config: LaunchConfig,
+        params: U,
+    ) -> Result<(), DeviceError>
+    where
+        cudarc::driver::CudaFunction: LaunchAsync<U>,
+    {
+        match unsafe { func.launch(launch_config, params) } {
+            Ok(_) => {
+                return Ok(());
+            }
+            Err(e) => {
+                return Err(CudaDeviceError::KernelLaunch(e.to_string()).into());
+            }
+        }
     }
 
     fn const_alloc<T: WithDType + cudarc::driver::DeviceRepr>(

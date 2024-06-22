@@ -35,3 +35,15 @@ BINARY_OP(float, bsub_f32, x - y)
 BINARY_OP(double, bsub_f64, x - y);
 BINARY_OP(int, bsub_i32, x - y)
 BINARY_OP(long long, bsub_i64, x - y);
+
+// MAX
+BINARY_OP(float, bmax_f32, x > y ? x : y)
+BINARY_OP(double, bmax_f64, x > y ? x : y);
+BINARY_OP(int, bmax_i32, x > y ? x : y)
+BINARY_OP(long long, bmax_i64, x > y ? x : y);
+
+// MIN
+BINARY_OP(float, bmin_f32, x < y ? x : y)
+BINARY_OP(double, bmin_f64, x < y ? x : y);
+BINARY_OP(int, bmin_i32, x < y ? x : y)
+BINARY_OP(long long, bmin_i64, x < y ? x : y);

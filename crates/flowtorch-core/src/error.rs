@@ -33,6 +33,11 @@ pub enum StorageError {
         #[from]
         source: CudaStorageError,
     },
+    #[error("From Device Error {}", .soruce)]
+    Deivce {
+        #[from]
+        soruce: DeviceError,
+    },
     #[error("Deivce Mismatch")]
     DeviceMismatch,
     #[error("DataType Mismatch for {0} and {0}")]

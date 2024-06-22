@@ -1,10 +1,11 @@
 use std::usize;
 
 pub use cudarc;
-use cudarc::driver::{CudaSlice, DeviceSlice, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaSlice, DevicePtr, DeviceSlice, LaunchConfig};
 use flowcuda_kernels::CAST;
 
 use crate::error::StorageError;
+use crate::layout::Layout;
 use crate::ops::UnaryOpT;
 use crate::{backend::BackendStorage, cpu_backend::CpuStorage, ops::BinaryOpT, CudaDevice, DType};
 
@@ -18,6 +19,20 @@ pub enum CudaStorageSlice {
     I64(CudaSlice<i64>),
     F32(CudaSlice<f32>),
     F64(CudaSlice<f64>),
+}
+
+impl CudaStorageSlice {
+    fn get_storage_pointer(&self) -> u64 {
+        let slice = match self {
+            Self::U8(data) => *data.slice(0..data.len()).device_ptr(),
+            Self::U32(data) => *data.slice(0..data.len()).device_ptr(),
+            Self::I32(data) => *data.slice(0..data.len()).device_ptr(),
+            Self::I64(data) => *data.slice(0..data.len()).device_ptr(),
+            Self::F32(data) => *data.slice(0..data.len()).device_ptr(),
+            Self::F64(data) => *data.slice(0..data.len()).device_ptr(),
+        };
+        slice
+    }
 }
 
 type S = CudaStorageSlice;
@@ -83,43 +98,106 @@ impl BackendStorage for CudaStorage {
         &self.device
     }
 
-    fn to_dtype(
-        &self,
-        _layout: &crate::layout::Layout,
-        dtype: DType,
-    ) -> Result<Self, StorageError> {
-        if self.dtype() == dtype {
-            // return Ok(self.clone());
-        }
+    fn to_dtype(&self, layout: &Layout, dtype: DType) -> Result<Self, StorageError> {
         let slice = &self.slice;
-        match (slice, dtype) {
-            (CudaStorageSlice::F64(slice), DType::F32) => {
-                let data = self.device.alloc::<f32>(slice.len());
-                match data {
-                    Ok(data) => {
-                        let func = self
-                            .device
-                            .get_and_load_kernal_func("cast_f64_f32", CAST)
-                            .unwrap();
-                        let launch_config = LaunchConfig::for_num_elems(slice.len() as u32);
-                        let params = (&data, slice.len());
-                        match unsafe { func.launch(launch_config, params) } {
-                            Ok(_) => {
-                                return Ok(CudaStorage::new(
-                                    self.device().clone(),
-                                    CudaStorageSlice::F32(data),
-                                ))
-                            }
-                            Err(_) => return Err(StorageError::Unknown),
-                        }
-                    }
-                    Err(_e) => {
-                        return Err(StorageError::Unknown);
-                    }
-                }
+        let len: usize = layout.shape().num_elements();
+        let slice_ptr = slice.get_storage_pointer();
+        let func = self.device.get_and_load_kernal_func(
+            format!("cast_{}_{}", self.dtype().as_str(), dtype.as_str()).as_str(),
+            CAST,
+        )?;
+        match dtype {
+            DType::F32 => {
+                let out = self.device.alloc::<f32>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<f32>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<f32>)>(
+                        func,
+                        launch_config,
+                        params,
+                    )?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::F32(out),
+                ));
             }
-            _ => {
-                todo!()
+            DType::F64 => {
+                let out = self.device.alloc::<f64>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<f64>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<f64>)>(
+                        func,
+                        launch_config,
+                        params,
+                    )?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::F64(out),
+                ));
+            }
+            DType::I64 => {
+                let out = self.device.alloc::<i64>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<i64>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<i64>)>(
+                        func,
+                        launch_config,
+                        params,
+                    )?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::I64(out),
+                ));
+            }
+            DType::I32 => {
+                let out = self.device.alloc::<i32>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<i32>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<i32>)>(
+                        func,
+                        launch_config,
+                        params,
+                    )?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::I32(out),
+                ));
+            }
+            DType::U32 => {
+                let out = self.device.alloc::<u32>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<u32>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<u32>)>(
+                        func,
+                        launch_config,
+                        params,
+                    )?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::U32(out),
+                ));
+            }
+            DType::U8 => {
+                let out = self.device.alloc::<u8>(len)?;
+                let launch_config = LaunchConfig::for_num_elems(len as u32);
+                let params: (usize, u64, &CudaSlice<u8>) = (len, slice_ptr, &out);
+                let _ = self
+                    .device
+                    .launch_function::<(usize, u64, &CudaSlice<u8>)>(func, launch_config, params)?;
+                return Ok(CudaStorage::new(
+                    self.device().clone(),
+                    CudaStorageSlice::U8(out),
+                ));
             }
         }
     }

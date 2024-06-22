@@ -78,13 +78,13 @@ pub fn test_format_no_treshold(device: &Device) {
         .as_str()
     );
 
-    // assert_eq!(
-    //     "[0, 0, 0]",
-    //     Tensor::zeros(3, DType::F64, device)
-    //         .unwrap()
-    //         .fmt(Some(print_options))
-    //         .unwrap()
-    // );
+    assert_eq!(
+        "[0, 0, 0]",
+        Tensor::zeros(3, DType::F64, device)
+            .unwrap()
+            .fmt(Some(print_options))
+            .unwrap()
+    );
 
     assert_eq!(
         "[1, 1, 1]",

@@ -35,14 +35,14 @@ Right now the library is still in research phase where I am taking time to under
 - [x] Refactor Error::Unknown and fix todo
 - [x] The Array trait implementation right now is doing many recurssive operations, can we minimize it?
 - [x] Combine common tests for different devices
-- [ ] Add to_dtype method to convert the data type
+- [x] Add to_dtype method to convert the data type
+- [ ] Support Fotran Memory layout (colum Major)
+- [ ] Add Basic Back Prop
 - [ ] Fix Comp Op
 - [ ] Add in place Binary and Unary ops (ex, tensor.add_, tensor.abs_)
 - [ ] Improve Code Coverage
-- [ ] Add Basic Back Prop
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Fix select_index method
-- [ ] Support Fotran Memory layout (colum Major)
 - [ ] Study Torch7 Library and how Storage, Tensor is implemented
 - [ ] Add Benchmarking (https://github.com/bheisler/criterion.rs)
 

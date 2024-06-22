@@ -178,9 +178,6 @@ impl BackendStorage for CpuStorage {
     }
 
     fn to_dtype(&self, _layout: &Layout, dtype: DType) -> Result<Self, StorageError> {
-        if self.dtype() == dtype {
-            return Ok(self.clone());
-        }
         //TODO - Instead of iterating over everything, use the layout to get the strided elements only for perf
         // And also get a better way to handle these many dtypes
         match (self, dtype) {

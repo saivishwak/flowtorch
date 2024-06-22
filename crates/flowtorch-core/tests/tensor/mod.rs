@@ -15,9 +15,8 @@ pub fn test_tensor(device: &Device) {
     let _ = tensor_basic::test_shape(device);
     let _ = tensor_basic::test_dtype(device);
 
-    // TODO FOR CUDA
     // Tensor Dtype
-    // tensor_dtype::test_comparison(device);
+    tensor_dtype::test_to_dtype(device);
 
     //Tensor Format
     tensor_format::test_format_no_treshold(device);
@@ -33,8 +32,7 @@ pub fn test_tensor(device: &Device) {
     //Tensor Ops
     tensor_ops::test_add(device);
     tensor_ops::test_comparison(device);
-    // TODO FOR CUDA
-    // tensor_ops::test_max_min(device);
+    tensor_ops::test_max_min(device);
     tensor_ops::test_mul(device);
     tensor_ops::test_sub(device);
     tensor_ops::test_unary(device);

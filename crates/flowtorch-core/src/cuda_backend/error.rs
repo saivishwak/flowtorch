@@ -20,6 +20,8 @@ pub enum CudaStorageError {
         #[from]
         source: DeviceError,
     },
+    #[error("Kernel Launch Error: {0}")]
+    KernelLaunch(String),
 }
 
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -37,4 +39,6 @@ pub enum CudaDeviceError {
     MissingKernel(String),
     #[error("Alloc failed {0:?}")]
     AllocFail(Option<String>),
+    #[error("Kernel Launch Error: {0}")]
+    KernelLaunch(String),
 }

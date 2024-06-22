@@ -65,7 +65,7 @@ Running Tests for CUDA
 cargo test --features "cuda" -- --nocapture 
 ```
 
-Running Coverage
+Running Coverage asdfasdf
 ```sh
 # Without CUDA
 cargo tarpaulin --verbose --workspace --timeout 120 --out Html

@@ -75,3 +75,8 @@ cargo tarpaulin --verbose --workspace --timeout 120 --out Html
 # With CUDA
 cargo tarpaulin --features="cuda" --verbose --workspace --timeout 120 --out Html
 ```
+
+To excule cuda_backend from coverage for non cuda environment (GithubActions)
+```sh
+cargo tarpaulin --verbose --workspace --timeout 120 --out Html --exclude-files "crates/flowtorch-core/src/cuda_backend/**/*"
+```

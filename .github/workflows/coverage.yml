@@ -10,7 +10,7 @@ jobs:
     name: coverage
     runs-on: ubuntu-latest
     container:
-      image: xd009642/tarpaulin:develop
+      image: xd009642/tarpaulin:
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
@@ -18,7 +18,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-          apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml --exclude-files "crates/flowtorch-core/src/cuda_backend/**/*"
+          apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --exclude-files "crates/flowtorch-core/src/cuda_backend/**/*" --out xml
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4.4.1

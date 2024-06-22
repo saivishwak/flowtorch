@@ -43,8 +43,8 @@ Right now the library is still in research phase where I am taking time to under
 - [ ] Improve Code Coverage
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
 - [ ] Fix select_index method
-- [ ] Study Torch7 Library and how Storage, Tensor is implemented
 - [ ] Add Benchmarking (https://github.com/bheisler/criterion.rs)
+- [ ] Study Torch7 Library and how Storage, Tensor is implemented
 
 ===
 

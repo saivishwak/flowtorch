@@ -13,11 +13,11 @@ pub fn test_narrow(device: &Device) {
         .unwrap()
         .equal(&Tensor::new(&[[0.0], [1.0]], device).unwrap()));
 
-    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], &device)
+    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], device)
         .unwrap()
         .narrow(1, 0, 1)
         .unwrap();
-    let t2 = Tensor::new(&[[1], [3], [5]], &device).unwrap();
+    let t2 = Tensor::new(&[[1], [3], [5]], device).unwrap();
     assert!(t1.equal(&t2));
 }
 

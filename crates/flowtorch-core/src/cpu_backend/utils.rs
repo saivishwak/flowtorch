@@ -12,7 +12,7 @@ pub(super) fn compare_vecs<T: PartialEq>(
     let strided_index_v2 = StridedIndex::from_layout(vec2_layout);
 
     // Use zip and all to iterate through elements and check condition
-    let result = strided_index_v1.zip(strided_index_v2).all(|(i1, i2)| {
+    strided_index_v1.zip(strided_index_v2).all(|(i1, i2)| {
         // Ensure indices are within bounds
         if i1 < vec1.len() && i2 < vec2.len() {
             // Compare elements from vec1 and vec2
@@ -20,6 +20,5 @@ pub(super) fn compare_vecs<T: PartialEq>(
         } else {
             false
         }
-    });
-    result
+    })
 }

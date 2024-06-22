@@ -25,7 +25,7 @@ impl Layout {
     }
 
     pub fn dims_slice(&self) -> &[usize] {
-        &self.shape.dims()
+        self.shape.dims()
     }
 
     pub fn shape(&self) -> Shape {

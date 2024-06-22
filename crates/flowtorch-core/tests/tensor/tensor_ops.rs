@@ -84,36 +84,36 @@ pub fn test_unary(device: &Device) {
 }
 
 pub fn test_narrow(device: &Device) {
-    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], &device)
+    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], device)
         .unwrap()
         .narrow(1, 0, 1)
         .unwrap();
-    let t2 = Tensor::new(&[[1], [3], [5]], &device).unwrap();
+    let t2 = Tensor::new(&[[1], [3], [5]], device).unwrap();
 
     assert!((t1 + t2)
         .unwrap()
-        .equal(&Tensor::new(&[[2], [6], [10]], &device).unwrap()));
+        .equal(&Tensor::new(&[[2], [6], [10]], device).unwrap()));
 
-    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], &device)
+    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], device)
         .unwrap()
         .narrow(1, 0, 1)
         .unwrap();
-    let t2 = Tensor::new(&[[1], [3], [5]], &device).unwrap();
+    let t2 = Tensor::new(&[[1], [3], [5]], device).unwrap();
 
     assert!((t2 + t1)
         .unwrap()
-        .equal(&Tensor::new(&[[2], [6], [10]], &device).unwrap()));
+        .equal(&Tensor::new(&[[2], [6], [10]], device).unwrap()));
 
-    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], &device)
+    let t1 = Tensor::new(&[[1, 2], [3, 4], [5, 6]], device)
         .unwrap()
         .narrow(1, 0, 1)
         .unwrap();
-    let t2 = Tensor::new(&[[2, 2], [4, 4], [6, 6]], &device)
+    let t2 = Tensor::new(&[[2, 2], [4, 4], [6, 6]], device)
         .unwrap()
         .narrow(1, 0, 1)
         .unwrap();
 
     assert!((t2 + t1)
         .unwrap()
-        .equal(&Tensor::new(&[[3], [7], [11]], &device).unwrap()));
+        .equal(&Tensor::new(&[[3], [7], [11]], device).unwrap()));
 }

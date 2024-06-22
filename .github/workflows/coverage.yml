@@ -18,7 +18,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-          apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml cargo tarpaulin --verbose --workspace --timeout 120 --out Html --exclude-files "crates/flowtorch-core/src/cuda_backend/**/*"
+          apt-get update && apt-get install -y python3-pip && cargo tarpaulin --verbose --workspace --timeout 120 --out xml --exclude-files "crates/flowtorch-core/src/cuda_backend/**/*"
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4.4.1

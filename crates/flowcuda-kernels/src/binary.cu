@@ -7,8 +7,7 @@
   {                                                                                                                                                                                                        \
     if (rhs_is_contiguous && lhs_is_contiguous)                                                                                                                                                            \
     {                                                                                                                                                                                                      \
-      for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel;                                                                                                                              \
-           i += blockDim.x * gridDim.x)                                                                                                                                                                    \
+      for (unsigned int i = blockIdx.x * blockDim.x + threadIdx.x; i < numel; i += blockDim.x * gridDim.x)                                                                                                 \
       {                                                                                                                                                                                                    \
         TYPENAME x = lhs[i];                                                                                                                                                                               \
         TYPENAME y = rhs[i];                                                                                                                                                                               \

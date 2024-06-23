@@ -1,4 +1,4 @@
-use cudarc::driver::{CudaSlice, DeviceSlice, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaSlice, LaunchAsync, LaunchConfig};
 
 use crate::{
     dtype::WithDType,
@@ -55,7 +55,7 @@ impl<B: BinaryOpT> Pair2Runner for B {
         lhs_layout: &Layout,
         rhs_layout: &Layout,
     ) -> Result<CudaSlice<T>, StorageError> {
-        let numel = lhs.len();
+        let numel = lhs_layout.shape().elem_count();
         let func = match device
             .get_and_load_kernal_func(&utils::get_kernel_name::<T>(B::KERNEL), kernels::BINARY)
         {
@@ -65,11 +65,23 @@ impl<B: BinaryOpT> Pair2Runner for B {
         let data = device.alloc::<T>(numel).unwrap();
         let lhs_layout_data = device
             .device
-            .htod_copy([lhs_layout.shape().dims(), lhs_layout.stride().as_slice()].concat())
+            .htod_copy(
+                [
+                    lhs_layout.shape().dims().as_slice(),
+                    lhs_layout.stride().as_slice(),
+                ]
+                .concat(),
+            )
             .unwrap(); //It is okay to panic here if we are not able to alloc data
         let rhs_layout_data = device
             .device
-            .htod_copy([rhs_layout.shape().dims(), rhs_layout.stride().as_slice()].concat())
+            .htod_copy(
+                [
+                    rhs_layout.shape().dims().as_slice(),
+                    rhs_layout.stride().as_slice(),
+                ]
+                .concat(),
+            )
             .unwrap(); //It is okay to panic here if we are not able to alloc data
         let launch_config: LaunchConfig = LaunchConfig::for_num_elems(numel as u32);
         let params = (
@@ -130,7 +142,7 @@ impl<U: UnaryOpT> Pair1Runner for U {
         lhs: &CudaSlice<T>,
         layout: &Layout,
     ) -> Result<CudaSlice<T>, StorageError> {
-        let numel = lhs.len();
+        let numel = layout.shape().elem_count();
         let num_dims = layout.shape().dims().len();
         let func = match device
             .get_and_load_kernal_func(&utils::get_kernel_name::<T>(U::KERNEL), kernels::UNARY)
@@ -142,7 +154,7 @@ impl<U: UnaryOpT> Pair1Runner for U {
         let launch_config = LaunchConfig::for_num_elems(numel as u32);
         let layout_data = device
             .device
-            .htod_copy([layout.shape().dims(), layout.stride().as_slice()].concat())
+            .htod_copy([layout.shape().dims().as_slice(), layout.stride().as_slice()].concat())
             .unwrap(); //It is okay to panic here if we are not able to alloc data
         let params = (
             numel,

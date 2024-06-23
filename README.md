@@ -39,15 +39,15 @@ Right now the library is still in research phase where I am taking time to under
 - [x] Add strided index in CPU and CUDA
 - [x] Ops to use strided index for CPU and CUDA
 - [ ] Fix Comp Op and Broadcasting
-- [ ] Impl flatten https://pytorch.org/docs/stable/generated/torch.flatten.html (this should when used to_vec1 give 1D array of strided indexed elements)
-- [ ] Formatter to use strided index / flatten
 - [ ] Add Basic Back Prop
+- [ ] Add other Ops like Pow, Matmul, Add types for Unary CUDA Ops in kernel
 - [ ] Add in place Binary and Unary ops (ex, tensor.add_, tensor.abs_)
-- [ ] Improve Code Coverage
+- [ ] Impl flatten https://pytorch.org/docs/stable/generated/torch.flatten.html (this should when used to_vec1 give 1D array of strided indexed elements)
 - [ ] Add Tensor.to_vec methods, to get different dim vectors
-- [ ] Support Fotran Memory layout (colum Major)
+- [ ] Improve Code Coverage
 - [ ] Fix select_index method
 - [ ] Add Benchmarking (https://github.com/bheisler/criterion.rs)
+- [ ] Support Fotran Memory layout (colum Major)
 - [ ] Study Torch7 Library and how Storage, Tensor is implemented
 
 ===

@@ -1,8 +1,7 @@
-use crate::{layout::Layout, StridedIndex};
+use crate::{dtype::WithDType, layout::Layout, StridedIndex};
 
-//TODO Need to implement Strided Indexing instead of plain vector index
 // Helper function to compare vectors of any type
-pub(super) fn compare_vecs<T: PartialEq>(
+pub(super) fn compare_vecs<T: PartialEq + WithDType>(
     vec1: &[T],
     vec2: &[T],
     vec1_layout: &Layout,

@@ -1,4 +1,4 @@
-use flowtorch_core::{Device, Tensor};
+use flowtorch_core::{Device, DeviceT, Tensor};
 
 pub fn test_comparison(device: &Device) {
     assert!(Tensor::new(&[0.0, 1.0, 2.0], device)

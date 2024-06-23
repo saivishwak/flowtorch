@@ -48,3 +48,7 @@ UNARY_OP(double, uceil_f64, ceil(x));
 // Floor
 UNARY_OP(float, ufloor_f32, floor(x));
 UNARY_OP(double, ufloor_f64, floor(x));
+
+// Sin
+UNARY_OP(float, usin_f32, sin(x));
+UNARY_OP(double, usin_f64, sin(x));

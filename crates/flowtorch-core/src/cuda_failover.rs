@@ -1,4 +1,5 @@
 #![allow(dead_code, unused_variables)]
+#[cfg(not(tarpaulin_include))]
 // This file is used as a placeholder non cuda compilation of the project for non CUDA
 use crate::backend::{BackendDevice, BackendStorage};
 use crate::dtype::DType;
